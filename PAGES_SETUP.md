@@ -1,7 +1,21 @@
-# Fix GitHub Pages 404 — READ THIS
+# Fix GitHub Pages — READ THIS
 
-## Root cause
+## Jekyll error (`style.scss` / `jekyll-build-pages`)
 
+Your site is **plain HTML** — GitHub must **not** run Jekyll on it.
+
+**Option A — Branch deploy (simplest):**
+1. **Settings → Pages** → **Deploy from a branch** → `main` → **`/docs`** → Save
+2. `.nojekyll` in `docs/` skips Jekyll automatically
+
+**Option B — GitHub Actions:**
+1. **Settings → Pages** → Source: **GitHub Actions**
+2. **Actions** tab → disable any workflow using `jekyll-build-pages`
+3. Run only **"Deploy static site to GitHub Pages"** (`static-pages.yml`)
+
+---
+
+## Root cause (404)
 Your files are on GitHub, but **Pages is pointing at the wrong folder** OR you are opening the wrong URL.
 
 ---
