@@ -8,7 +8,7 @@ Personal portfolio website deployed via **GitHub Pages**.
 
 ## Repository structure
 
-Only the `docs/` folder is published. Everything else supports deployment.
+Only the `docs/` folder is published.
 
 ```
 developer-portfolio/
@@ -22,28 +22,43 @@ developer-portfolio/
 │       ├── css/style.css
 │       ├── js/main.js
 │       └── imgs/avtar.jpg
-├── .github/workflows/
-│   └── static-pages.yml     ← optional CI deploy
 └── README.md
 ```
+
+No GitHub Actions workflow is needed — Pages deploys directly from the `docs/` folder.
 
 ---
 
 ## Enable GitHub Pages (one-time)
 
 1. Open **[Settings → Pages](https://github.com/im-rihan/developer-portfolio/settings/pages)**
-2. Configure:
+2. Configure **exactly**:
 
 | Setting | Value |
 |---------|-------|
-| **Source** | Deploy from a branch |
+| **Source** | **Deploy from a branch** |
 | **Branch** | `main` |
 | **Folder** | **`/docs`** |
 
 3. Click **Save**
 4. Wait 5–10 minutes, then visit the live URL above
 
-> Do **not** use the default Jekyll workflow. This is a plain HTML site — branch deploy + `.nojekyll` is all you need.
+### Important
+
+- Use **Deploy from a branch** — not **GitHub Actions**
+- Do **not** enable Jekyll — `.nojekyll` in `docs/` handles this
+- No CI workflow required — push to `main` and Pages updates automatically
+
+---
+
+## Troubleshooting
+
+| Error | Fix |
+|-------|-----|
+| **404 — no site here** | Pages source must be `main` → `/docs` (see above) |
+| **Jekyll / style.scss error** | Switch source from GitHub Actions to **Deploy from a branch** |
+| **Environment protection rules** | Disable GitHub Actions deploy — use branch deploy instead |
+| **Failed Actions workflow** | Delete/disable any Pages workflow in the **Actions** tab — not needed |
 
 ---
 
@@ -60,7 +75,7 @@ Change files inside **`docs/`** only:
 | `docs/resume.html` | Resume layout |
 | `docs/resume.pdf` / `.docx` | Replace when resume updates |
 
-After editing, commit and push to `main`. GitHub Pages updates automatically.
+After editing, commit and push to `main`.
 
 ---
 
@@ -72,16 +87,6 @@ python -m http.server 8080
 ```
 
 Open **http://localhost:8080**
-
----
-
-## Optional: GitHub Actions deploy
-
-If you prefer **GitHub Actions** instead of branch deploy:
-
-1. **Settings → Pages** → Source: **GitHub Actions**
-2. Disable any workflow using `jekyll-build-pages`
-3. Use only **Deploy static site to GitHub Pages** (`static-pages.yml`)
 
 ---
 
