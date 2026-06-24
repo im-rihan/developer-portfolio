@@ -272,12 +272,14 @@
         margin: 0;
         box-shadow: none;
         max-width: 100%;
-        display: block;
+        width: 100%;
+        display: grid;
+        grid-template-columns: 280px 1fr;
         min-height: auto;
       }
       .sidebar {
-        break-after: avoid;
-        page-break-after: avoid;
+        break-inside: avoid;
+        page-break-inside: avoid;
         padding: 24px 28px;
       }
       .main {
