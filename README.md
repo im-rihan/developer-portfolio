@@ -4,6 +4,11 @@ Personal portfolio website, resume, and GitHub profile README for **Rihan Mohamm
 
 **Live site:** [im-rihan.github.io/developer-portfolio](https://im-rihan.github.io/developer-portfolio)
 
+> **Getting 404?** Your files are deployed — Pages is not enabled yet.  
+> See **[PAGES_SETUP.md](./PAGES_SETUP.md)** or go directly to  
+> **[Settings → Pages](https://github.com/im-rihan/developer-portfolio/settings/pages)**  
+> → Source: **Deploy from a branch** → Branch: **`gh-pages`** → **`/ (root)`** → Save
+
 ## What's included
 
 | File / Folder | Description |
