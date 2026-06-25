@@ -4,8 +4,8 @@ export default function StatusPage() {
     return (
         <>
             <header className="page-header container">
-                <h1>Status Monitor</h1>
-                <p>Portfolio stats and link health checks for key endpoints.</p>
+                <h1>Status & Analytics</h1>
+                <p>Visitor map, portfolio stats, and link health checks.</p>
             </header>
             <div className="container">
                 <StatusDashboard />

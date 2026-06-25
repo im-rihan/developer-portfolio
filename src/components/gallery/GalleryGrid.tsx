@@ -12,10 +12,11 @@ export function GalleryGrid() {
         <>
             <div className={styles.grid}>
                 {galleryItems.map((item, i) => (
-                    <FadeIn key={item.id} delay={i * 0.05}>
+                    <FadeIn key={item.id} delay={i * 0.05} className="card-cell">
                         <button
                             type="button"
                             className={styles.card}
+                            data-cursor="card"
                             onClick={() => setLightbox(item)}
                             style={{ background: item.gradient }}
                         >

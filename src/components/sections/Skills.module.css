@@ -1,11 +1,9 @@
 .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 20px;
+    /* extends .card-grid from globals */
 }
 
 .card {
-    padding: 24px;
+    padding: 28px;
 }
 
 .card h3 {
@@ -19,6 +17,8 @@
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
+    align-content: flex-start;
+    flex: 1;
 }
 
 .tag {

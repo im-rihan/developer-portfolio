@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { statusTargets } from "@/data/status-targets";
 import { portfolioStats, skillGroups } from "@/data/profile";
+import { VisitorMonitor } from "@/components/analytics/VisitorMonitor";
 import { checkAllLinks, type StatusResult } from "@/lib/status-check";
 import styles from "./StatusDashboard.module.css";
 
@@ -21,6 +22,8 @@ export function StatusDashboard() {
 
     return (
         <div className={styles.wrapper}>
+            <VisitorMonitor />
+
             <div className={`glass-card ${styles.statsCard}`}>
                 <h2>Portfolio Stats</h2>
                 <div className={styles.statsGrid}>

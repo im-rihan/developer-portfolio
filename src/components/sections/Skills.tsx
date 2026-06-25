@@ -15,10 +15,10 @@ export function Skills() {
                         Technical <span>Skills</span>
                     </h2>
                 </FadeIn>
-                <div className={styles.grid}>
+                <div className={`card-grid ${styles.grid}`}>
                     {skillGroups.map((group, i) => (
-                        <FadeIn key={group.title} delay={i * 0.06}>
-                            <TiltCard className={styles.card}>
+                        <FadeIn key={group.title} delay={i * 0.06} className="card-cell">
+                            <TiltCard className={`card-equal ${styles.card}`}>
                                 <h3>{group.title}</h3>
                                 <div className={styles.tags}>
                                     {group.tags.map((tag) => (

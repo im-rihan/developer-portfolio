@@ -13,8 +13,8 @@ export function TiltCard({ children, className = "" }: TiltCardProps) {
     const x = useMotionValue(0);
     const y = useMotionValue(0);
     const spring = { stiffness: 300, damping: 20 };
-    const rotateX = useSpring(useTransform(y, [-0.5, 0.5], [8, -8]), spring);
-    const rotateY = useSpring(useTransform(x, [-0.5, 0.5], [-8, 8]), spring);
+    const rotateX = useSpring(useTransform(y, [-0.5, 0.5], [10, -10]), spring);
+    const rotateY = useSpring(useTransform(x, [-0.5, 0.5], [-10, 10]), spring);
 
     const handleMove = (e: MouseEvent<HTMLDivElement>) => {
         const rect = e.currentTarget.getBoundingClientRect();
@@ -29,11 +29,13 @@ export function TiltCard({ children, className = "" }: TiltCardProps) {
 
     return (
         <motion.div
+            data-tilt-card
+            data-cursor="card"
             className={`${styles.card} glass-card ${className}`}
             style={{ rotateX, rotateY, transformPerspective: 800 }}
             onMouseMove={handleMove}
             onMouseLeave={handleLeave}
-            whileHover={{ y: -6 }}
+            whileHover={{ y: -8, scale: 1.01 }}
             transition={{ type: "spring", stiffness: 300, damping: 20 }}
         >
             {children}

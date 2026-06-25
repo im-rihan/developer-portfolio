@@ -4,6 +4,8 @@ import Link from "next/link";
 import { siteMeta } from "@/data/profile";
 import { assetPath } from "@/lib/paths";
 import { FadeIn } from "@/components/effects/FadeIn";
+import { TiltCard } from "@/components/effects/TiltCard";
+import { SocialLinks } from "@/components/ui/SocialLinks";
 import styles from "./Hero.module.css";
 
 export function Hero() {
@@ -30,15 +32,10 @@ export function Hero() {
                                 Download Resume
                             </a>
                         </div>
-                        <div className={styles.social}>
-                            <a href={siteMeta.github} target="_blank" rel="noopener noreferrer" aria-label="GitHub">GH</a>
-                            <a href={siteMeta.linkedin} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">IN</a>
-                            <a href={siteMeta.twitter} target="_blank" rel="noopener noreferrer" aria-label="Twitter">X</a>
-                            <a href={`mailto:${siteMeta.email}`} aria-label="Email">@</a>
-                        </div>
+                        <SocialLinks size="md" className={styles.social} />
                     </FadeIn>
                     <FadeIn delay={0.15} className={styles.visual}>
-                        <div className={`glass-card ${styles.codeCard}`}>
+                        <TiltCard className={styles.codeCard}>
                             <div className={styles.codeHeader}>
                                 <span className={styles.red} />
                                 <span className={styles.yellow} />
@@ -56,7 +53,7 @@ export function Hero() {
   }
 };`}</code>
                             </pre>
-                        </div>
+                        </TiltCard>
                     </FadeIn>
                 </div>
             </div>

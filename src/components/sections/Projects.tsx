@@ -15,10 +15,10 @@ export function Projects() {
                         Featured <span>Projects</span>
                     </h2>
                 </FadeIn>
-                <div className={styles.grid}>
+                <div className={`card-grid ${styles.grid}`}>
                     {projects.map((p, i) => (
-                        <FadeIn key={p.title} delay={i * 0.06}>
-                            <TiltCard className={styles.card}>
+                        <FadeIn key={p.title} delay={i * 0.06} className="card-cell">
+                            <TiltCard className={`card-equal ${styles.card}`}>
                                 <div className={styles.icon}>{p.icon}</div>
                                 <h3>{p.title}</h3>
                                 <div className={styles.stack}>{p.stack}</div>

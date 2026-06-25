@@ -17,7 +17,7 @@ export function Experience() {
                 <div className={styles.timeline}>
                     {experience.map((job, i) => (
                         <FadeIn key={job.role + job.company} delay={i * 0.1}>
-                            <article className={`glass-card ${styles.item}`}>
+                            <article className={styles.item}>
                                 <div className={styles.header}>
                                     <h3>{job.role}</h3>
                                     <span className={styles.meta}>{job.period}</span>

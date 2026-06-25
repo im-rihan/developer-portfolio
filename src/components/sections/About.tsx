@@ -23,7 +23,7 @@ export function About() {
                     </FadeIn>
                     <div className={styles.stats}>
                         {stats.map((s, i) => (
-                            <FadeIn key={s.label} delay={i * 0.08}>
+                            <FadeIn key={s.label} delay={i * 0.08} className={styles.statCell}>
                                 <TiltCard className={styles.statCard}>
                                     <div className={styles.num}>{s.num}</div>
                                     <div className={styles.label}>{s.label}</div>
