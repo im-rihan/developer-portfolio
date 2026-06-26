@@ -32,11 +32,27 @@ Output goes to `out/` — ready for static hosting.
 
 This repo is **`im-rihan.github.io`** on GitHub — the site is served at the root URL.
 
-1. **[Settings → Pages](https://github.com/im-rihan/im-rihan.github.io/settings/pages)**
-2. Source: **Deploy from a branch** → **`gh-pages`** → **`/ (root)`**
-3. **Settings → Actions → General** → **Read and write permissions**
+### Required Pages setting (one-time)
+
+The workflow publishes the Next.js build to the **`gh-pages`** branch.  
+If Pages still serves the old HTML site, the source is wrong.
+
+1. Open **[Settings → Pages](https://github.com/im-rihan/im-rihan.github.io/settings/pages)**
+2. **Build and deployment → Source:** Deploy from a branch
+3. **Branch:** `gh-pages` · **Folder:** `/ (root)` — **not** `main` / `/docs`
+4. Save and wait 1–3 minutes
+
+Or via CLI:
+
+```powershell
+gh api repos/im-rihan/im-rihan.github.io/pages -X PUT -f "source[branch]=gh-pages" -f "source[path]=/"
+```
+
+5. **Settings → Actions → General** → **Read and write permissions**
 
 Push to `main` — the workflow runs `npm ci`, `npm run build`, and publishes `out/` to `gh-pages`.
+
+> **Note:** Legacy static files live in `docs-legacy/` for reference only. They are not deployed.
 
 ---
 
