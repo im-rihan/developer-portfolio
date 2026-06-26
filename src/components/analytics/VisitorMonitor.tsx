@@ -1,61 +1,100 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Globe, Monitor, Smartphone, Tablet, MapPin } from "lucide-react";
-import { getVisitorStats, type VisitorStats } from "@/lib/visitor-analytics";
+import { useEffect, useState, useCallback } from "react";
+import { Globe, Monitor, Smartphone, Tablet, MapPin, RefreshCw, Users, Flag } from "lucide-react";
+import {
+    getVisitorStats,
+    VISITOR_UPDATE_EVENT,
+    type VisitorStats,
+} from "@/lib/visitor-analytics";
+import { countryFlagSrc, countryFlagEmoji } from "@/lib/country-flag";
 import { getCountryCoords } from "@/data/country-coordinates";
 import styles from "./VisitorMonitor.module.css";
 
-function project(lon: number, lat: number, w: number, h: number): [number, number] {
-    return [((lon + 180) / 360) * w, ((90 - lat) / 180) * h];
+/** Natural equirectangular landmass — ocean color comes from CSS gradient. */
+const WORLD_MAP_SRC =
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/World_map_blank_without_borders.svg/1280px-World_map_blank_without_borders.svg.png";
+
+function projectPercent(lon: number, lat: number): { left: number; top: number } {
+    return {
+        left: ((lon + 180) / 360) * 100,
+        top: ((90 - lat) / 180) * 100,
+    };
+}
+
+function CountryFlag({
+    code,
+    className,
+    title,
+    size = "md",
+}: {
+    code: string;
+    className?: string;
+    title?: string;
+    size?: "sm" | "md" | "lg";
+}) {
+    const [failed, setFailed] = useState(false);
+    const src = countryFlagSrc(code);
+    const sizeClass =
+        size === "sm" ? styles.flagSm : size === "lg" ? styles.flagLg : styles.flagMd;
+
+    if (!src || failed) {
+        return (
+            <span
+                className={`${styles.flagEmoji} ${sizeClass} ${className ?? ""}`}
+                title={title}
+                aria-hidden
+            >
+                {countryFlagEmoji(code)}
+            </span>
+        );
+    }
+
+    return (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+            src={src}
+            alt=""
+            className={`${styles.flagImg} ${sizeClass} ${className ?? ""}`}
+            title={title}
+            loading="lazy"
+            decoding="async"
+            onError={() => setFailed(true)}
+        />
+    );
 }
 
 function WorldMap({ countries }: { countries: VisitorStats["countries"] }) {
-    const w = 720;
-    const h = 360;
     const max = Math.max(...countries.map((c) => c.count), 1);
 
     return (
-        <svg viewBox={`0 0 ${w} ${h}`} className={styles.map} aria-label="Visitor world map">
-            <defs>
-                <radialGradient id="mapGlow">
-                    <stop offset="0%" stopColor="rgba(20,184,166,0.35)" />
-                    <stop offset="100%" stopColor="rgba(20,184,166,0)" />
-                </radialGradient>
-            </defs>
-            {Array.from({ length: 9 }, (_, i) => (
-                <line
-                    key={`h${i}`}
-                    x1={0}
-                    y1={(h / 8) * i}
-                    x2={w}
-                    y2={(h / 8) * i}
-                    className={styles.gridLine}
-                />
-            ))}
-            {Array.from({ length: 13 }, (_, i) => (
-                <line
-                    key={`v${i}`}
-                    x1={(w / 12) * i}
-                    y1={0}
-                    x2={(w / 12) * i}
-                    y2={h}
-                    className={styles.gridLine}
-                />
-            ))}
-            {countries.map((c) => {
-                const [lon, lat] = getCountryCoords(c.code);
-                const [x, y] = project(lon, lat, w, h);
-                const r = 6 + (c.count / max) * 14;
-                return (
-                    <g key={c.code}>
-                        <circle cx={x} cy={y} r={r * 2} fill="url(#mapGlow)" opacity={0.6} />
-                        <circle cx={x} cy={y} r={r} className={styles.marker} />
-                        <title>{`${c.name}: ${c.count} visit${c.count !== 1 ? "s" : ""}`}</title>
-                    </g>
-                );
-            })}
-        </svg>
+        <div className={styles.mapWrap}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={WORLD_MAP_SRC} alt="" className={styles.mapGeo} aria-hidden />
+            <div className={styles.mapOcean} aria-hidden />
+            <div className={styles.mapPins}>
+                {countries.map((c) => {
+                    const [lon, lat] = getCountryCoords(c.code);
+                    const { left, top } = projectPercent(lon, lat);
+                    const scale = 0.85 + (c.count / max) * 0.45;
+                    return (
+                        <div
+                            key={c.code}
+                            className={styles.mapPin}
+                            style={{ left: `${left}%`, top: `${top}%`, transform: `translate(-50%, -50%) scale(${scale})` }}
+                            title={`${c.name}: ${c.count} visit${c.count !== 1 ? "s" : ""}`}
+                        >
+                            <span className={styles.mapPinGlow} aria-hidden />
+                            <CountryFlag code={c.code} size="lg" className={styles.mapPinFlag} title={c.name} />
+                            <span className={styles.mapPinMeta}>
+                                <span className={styles.mapPinCode}>{c.code}</span>
+                                <span className={styles.mapPinCount}>{c.count}</span>
+                            </span>
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
     );
 }
 
@@ -66,17 +105,26 @@ function deviceIcon(type: string) {
 }
 
 export function VisitorMonitor() {
-    const [stats, setStats] = useState<(VisitorStats & { source: "supabase" | "local" | "global" }) | null>(null);
+    const [stats, setStats] = useState<
+        (VisitorStats & { source: string; isDemo?: boolean; supabase?: { ok: boolean; message: string } }) | null
+    >(null);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        getVisitorStats().then((s) => {
-            setStats(s);
-            setLoading(false);
-        });
+    const load = useCallback(async (refresh = false) => {
+        setLoading(true);
+        const s = await getVisitorStats(refresh);
+        setStats(s);
+        setLoading(false);
     }, []);
 
-    if (loading) {
+    useEffect(() => {
+        load();
+        const onUpdate = () => load(true);
+        window.addEventListener(VISITOR_UPDATE_EVENT, onUpdate);
+        return () => window.removeEventListener(VISITOR_UPDATE_EVENT, onUpdate);
+    }, [load]);
+
+    if (loading && !stats) {
         return (
             <div className={`glass-card ${styles.card}`}>
                 <p className={styles.loading}>Loading visitor analytics...</p>
@@ -86,81 +134,132 @@ export function VisitorMonitor() {
 
     if (!stats) return null;
 
+    const countryCount = stats.countries.length;
+    const topDevice = stats.devices[0]?.label ?? "—";
+    const isDemo = stats.isDemo || stats.source === "demo";
+    const supabase = stats.supabase;
+
     return (
-        <div className={`glass-card ${styles.card}`}>
-            <div className={styles.header}>
-                <Globe size={22} />
-                <div>
-                    <h2>Visitor Monitor</h2>
-                    <p className={styles.sub}>
-                        {stats.total} total visit{stats.total !== 1 ? "s" : ""}
-                        {stats.source === "global" && " · live global analytics"}
-                        {stats.source === "local" && " · this browser only"}
-                    </p>
-                </div>
-            </div>
-
-            {stats.current && (
-                <div className={styles.currentVisit}>
-                    <MapPin size={16} />
-                    <span>
-                        Latest: <strong>{stats.current.city ? `${stats.current.city}, ` : ""}{stats.current.countryName}</strong>
-                        {" · "}{stats.current.deviceLabel} · {stats.current.browser}
-                    </span>
+        <div className={styles.wrapper}>
+            {isDemo && (
+                <div className={styles.demoBanner}>
+                    Demo preview — sample visitor data on localhost. Add <code>?live=1</code> to see real tracking.
                 </div>
             )}
-
-            {stats.countries.length > 0 ? (
-                <WorldMap countries={stats.countries} />
-            ) : (
-                <div className={styles.emptyMap}>No location data yet — visits appear after browsing the site.</div>
+            {!isDemo && supabase && !supabase.ok && (
+                <div className={styles.errorBanner} role="alert">
+                    <strong>Supabase:</strong> {supabase.message}
+                </div>
             )}
-
-            <div className={styles.panels}>
-                <div className={styles.panel}>
-                    <h3>By country</h3>
-                    <ul>
-                        {stats.countries.length === 0 && <li className={styles.muted}>No data yet</li>}
-                        {stats.countries.map((c) => (
-                            <li key={c.code}>
-                                <span>{c.name}</span>
-                                <span className={styles.count}>{c.count}</span>
-                            </li>
-                        ))}
-                    </ul>
+            {!isDemo && supabase?.ok && (
+                <div className={styles.okBanner}>
+                    Supabase connected — visits sync to shared database.
                 </div>
-                <div className={styles.panel}>
-                    <h3>By device</h3>
-                    <ul>
-                        {stats.devices.length === 0 && <li className={styles.muted}>No data yet</li>}
-                        {stats.devices.map((d) => (
-                            <li key={d.type}>
-                                <span className={styles.deviceRow}>
-                                    {deviceIcon(d.type)}
-                                    {d.label}
-                                </span>
-                                <span className={styles.count}>{d.count}</span>
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-            </div>
-
-            {stats.recent.length > 0 && (
-                <div className={styles.recent}>
-                    <h3>Recent visits</h3>
-                    <div className={styles.recentList}>
-                        {stats.recent.map((v) => (
-                            <div key={v.id} className={styles.recentItem}>
-                                <span>{v.countryName}{v.city ? ` · ${v.city}` : ""}</span>
-                                <span className={styles.recentMeta}>
-                                    {v.browser} · {new Date(v.timestamp).toLocaleDateString()}
-                                </span>
-                            </div>
-                        ))}
+            )}
+            <div className={styles.metrics}>
+                <div className={`glass-card ${styles.metric}`}>
+                    <Users size={20} />
+                    <div>
+                        <span className={styles.metricNum}>{stats.total}</span>
+                        <span className={styles.metricLabel}>Total visits</span>
                     </div>
                 </div>
-            )}
+                <div className={`glass-card ${styles.metric}`}>
+                    <Flag size={20} />
+                    <div>
+                        <span className={styles.metricNum}>{countryCount}</span>
+                        <span className={styles.metricLabel}>Countries</span>
+                    </div>
+                </div>
+                <div className={`glass-card ${styles.metric}`}>
+                    <Monitor size={20} />
+                    <div>
+                        <span className={styles.metricNum}>{stats.devices.length}</span>
+                        <span className={styles.metricLabel}>Device types</span>
+                    </div>
+                </div>
+                <div className={`glass-card ${styles.metric}`}>
+                    <Globe size={20} />
+                    <div>
+                        <span className={styles.metricNum}>{topDevice.split("·")[0]?.trim() ?? "—"}</span>
+                        <span className={styles.metricLabel}>Top device</span>
+                    </div>
+                </div>
+            </div>
+
+            <div className={`glass-card ${styles.card}`}>
+                <div className={styles.header}>
+                    <Globe size={22} />
+                    <div className={styles.headerText}>
+                        <h2>Visitor Monitor</h2>
+                        <p className={styles.sub}>
+                            {isDemo ? "Sample geo analytics" : "Live geo analytics"}
+                            {stats.source === "merged" && " · global + local sync"}
+                        </p>
+                    </div>
+                    <button type="button" className={styles.refresh} onClick={() => load(true)} aria-label="Refresh stats">
+                        <RefreshCw size={16} />
+                    </button>
+                </div>
+
+                {stats.current && (
+                    <div className={styles.currentVisit}>
+                        <CountryFlag code={stats.current.countryCode} size="sm" className={styles.currentFlag} title={stats.current.countryName} />
+                        <MapPin size={16} />
+                        <span>
+                            You: <strong>{stats.current.city ? `${stats.current.city}, ` : ""}{stats.current.countryName}</strong>
+                            {" · "}{stats.current.deviceLabel} · {stats.current.browser}
+                        </span>
+                    </div>
+                )}
+
+                {stats.countries.length > 0 ? (
+                    <WorldMap countries={stats.countries} />
+                ) : (
+                    <div className={styles.emptyMap}>
+                        Browse the site once — your location will appear on the map with country flags and counts.
+                    </div>
+                )}
+
+                <div className={styles.panels}>
+                    <div className={`${styles.panel} glass-card`}>
+                        <h3>By country</h3>
+                        <ul>
+                            {stats.countries.length === 0 && <li className={styles.muted}>No data yet</li>}
+                            {stats.countries.map((c) => {
+                                const [lon, lat] = getCountryCoords(c.code);
+                                return (
+                                    <li key={c.code}>
+                                        <span className={styles.countryRow}>
+                                            <CountryFlag code={c.code} size="md" className={styles.countryFlag} title={c.name} />
+                                            <span>
+                                                <strong>{c.name}</strong>
+                                                <span className={styles.coords}>{lat.toFixed(1)}°, {lon.toFixed(1)}°</span>
+                                            </span>
+                                        </span>
+                                        <span className={styles.count}>{c.count}</span>
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                    </div>
+                    <div className={`${styles.panel} glass-card`}>
+                        <h3>By device</h3>
+                        <ul>
+                            {stats.devices.length === 0 && <li className={styles.muted}>No data yet</li>}
+                            {stats.devices.map((d) => (
+                                <li key={d.type}>
+                                    <span className={styles.deviceRow}>
+                                        {deviceIcon(d.type)}
+                                        {d.label}
+                                    </span>
+                                    <span className={styles.count}>{d.count}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 }

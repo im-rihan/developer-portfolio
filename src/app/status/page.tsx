@@ -1,4 +1,10 @@
 import { StatusDashboard } from "@/components/status/StatusDashboard";
+import { createPageMetadata } from "@/lib/site-metadata";
+
+export const metadata = createPageMetadata(
+    "Analytics",
+    "Visitor map, portfolio stats, and link health checks."
+);
 
 export default function StatusPage() {
     return (

@@ -107,8 +107,8 @@
 .fab {
     position: fixed;
     bottom: 24px;
-    right: 24px;
-    z-index: 900;
+    left: 24px;
+    z-index: 899;
     display: flex;
     align-items: center;
     gap: 8px;

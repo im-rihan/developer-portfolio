@@ -1,121 +1,261 @@
 .navbar {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: var(--nav-h);
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 32px);
+    max-width: 1140px;
+    height: calc(var(--nav-h) - 8px);
     z-index: 1000;
     background: var(--glass);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
 }
 
 .inner {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 0 24px;
     height: 100%;
-    display: flex;
+    padding: 0 16px 0 18px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
     align-items: center;
-    justify-content: space-between;
+    gap: 16px;
 }
 
-.logo {
-    font-weight: 800;
-    font-size: 1.15rem;
-    background: var(--gradient);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+.navCenter {
+    display: flex;
+    justify-content: center;
+    min-width: 0;
 }
 
 .links {
     display: flex;
-    gap: 28px;
     align-items: center;
+    gap: 4px;
+    list-style: none;
+    margin: 0;
+    padding: 4px;
+    background: var(--bg-elevated);
+    border-radius: 12px;
+    border: 1px solid var(--border);
 }
 
-.links a {
-    font-size: 0.875rem;
-    font-weight: 500;
+.links a,
+.exploreBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 14px;
+    border-radius: 9px;
+    font-size: 0.82rem;
+    font-weight: 600;
     color: var(--text-muted);
-    position: relative;
-    transition: color 0.2s;
-}
-
-.links a::after {
-    content: "";
-    position: absolute;
-    left: 0;
-    bottom: -4px;
-    width: 0;
-    height: 2px;
-    background: var(--gradient);
-    transition: width 0.25s ease;
-    border-radius: 2px;
+    transition: color 0.2s, background 0.2s;
+    white-space: nowrap;
+    text-decoration: none;
+    border: none;
+    background: none;
+    font-family: inherit;
+    cursor: pointer;
 }
 
 .links a:hover,
-.links a.active {
+.exploreBtn:hover,
+.links a.activeLink {
+    color: var(--text);
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.links a.activeLink {
+    color: var(--primary-light);
+    background: rgba(20, 184, 166, 0.12);
+    box-shadow: inset 0 0 0 1px rgba(20, 184, 166, 0.25);
+}
+
+.light .links a:hover,
+.light .links a.activeLink {
+    background: rgba(15, 118, 110, 0.08);
+}
+
+.exploreItem {
+    position: relative;
+}
+
+.exploreBtn.exploreOpen {
+    color: var(--primary-light);
+    background: rgba(20, 184, 166, 0.1);
+}
+
+.chevron {
+    transition: transform 0.2s;
+}
+
+.exploreOpen .chevron {
+    transform: rotate(180deg);
+}
+
+.dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    min-width: 180px;
+    padding: 8px;
+    background: var(--glass);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    z-index: 10;
+}
+
+.dropdownLink {
+    display: block;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    transition: background 0.2s, color 0.2s;
+}
+
+.dropdownLink:hover {
+    background: rgba(20, 184, 166, 0.1);
     color: var(--primary-light);
 }
 
-.links a:hover::after,
-.links a.active::after {
-    width: 100%;
-}
-
-.themeItem {
+.actions {
     display: flex;
     align-items: center;
+    gap: 10px;
+}
+
+.contactCta {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    background: var(--gradient);
+    color: #fff;
+    box-shadow: 0 4px 16px var(--glow);
+    transition: transform 0.2s, box-shadow 0.2s;
+    text-decoration: none;
+}
+
+.contactCta:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px var(--glow);
+}
+
+.contactCta span {
+    display: inline;
 }
 
 .menuBtn {
     display: none;
-    background: none;
-    border: none;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    width: 40px;
+    height: 40px;
     color: var(--text);
-    font-size: 1.5rem;
+    font-size: 1.2rem;
     cursor: pointer;
+    align-items: center;
+    justify-content: center;
+}
+
+@media (max-width: 960px) {
+    .contactCta span {
+        display: none;
+    }
+
+    .contactCta {
+        padding: 8px 10px;
+    }
+
+    .links a,
+    .exploreBtn {
+        padding: 8px 10px;
+        font-size: 0.78rem;
+    }
 }
 
 @media (max-width: 768px) {
+    .navbar {
+        top: 0;
+        left: 0;
+        transform: none;
+        width: 100%;
+        max-width: none;
+        border-radius: 0;
+        border-top: none;
+        border-left: none;
+        border-right: none;
+        height: var(--nav-h);
+    }
+
+    .inner {
+        grid-template-columns: auto 1fr auto;
+        padding: 0 16px;
+    }
+
+    .navCenter {
+        position: static;
+    }
+
     .menuBtn {
-        display: block;
+        display: flex;
     }
 
     .links {
         position: fixed;
         top: var(--nav-h);
-        left: 0;
-        right: 0;
+        left: 12px;
+        right: 12px;
         flex-direction: column;
-        gap: 0;
-        background: var(--glass);
-        backdrop-filter: blur(20px);
-        border-bottom: 1px solid var(--border);
-        padding: 16px 0;
-        transform: translateY(-120%);
+        align-items: stretch;
+        gap: 4px;
+        padding: 12px;
+        border-radius: 14px;
+        transform: translateY(-130%);
         opacity: 0;
         pointer-events: none;
         transition: transform 0.3s, opacity 0.3s;
     }
 
     .links.open {
-        transform: translateY(0);
+        transform: translateY(8px);
         opacity: 1;
         pointer-events: auto;
     }
 
     .links li {
         width: 100%;
-        text-align: center;
-        padding: 12px 24px;
     }
 
-    .themeItem {
-        justify-content: center;
-        padding-top: 8px;
+    .links a,
+    .exploreBtn {
+        width: 100%;
+        justify-content: flex-start;
+        padding: 12px 14px;
+    }
+
+    .dropdown {
+        position: static;
+        transform: none;
+        box-shadow: none;
+        border: none;
+        background: transparent;
+        padding: 0 0 0 12px;
+    }
+
+    .dropdownLink {
+        padding: 10px 12px;
     }
 }

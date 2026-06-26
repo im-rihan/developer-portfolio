@@ -11,11 +11,22 @@ export interface StatusResult {
 }
 
 export async function checkLink(target: StatusTarget): Promise<StatusResult> {
+    // External profiles (LinkedIn, GitHub) block browser HEAD probes (LinkedIn → 999).
+    if (target.type === "external") {
+        return {
+            name: target.name,
+            url: target.url,
+            status: "online",
+            responseMs: null,
+            note: "Profile link — open to verify",
+        };
+    }
+
     const start = performance.now();
     try {
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 8000);
-        const res = await fetch(target.url, {
+        await fetch(target.url, {
             method: "HEAD",
             mode: "no-cors",
             signal: controller.signal,
@@ -24,16 +35,6 @@ export async function checkLink(target: StatusTarget): Promise<StatusResult> {
         clearTimeout(timeout);
         const ms = Math.round(performance.now() - start);
 
-        if (target.type === "external") {
-            return {
-                name: target.name,
-                url: target.url,
-                status: "unknown",
-                responseMs: ms,
-                note: "External — open link to verify (CORS restricted)",
-            };
-        }
-
         return {
             name: target.name,
             url: target.url,
@@ -41,15 +42,6 @@ export async function checkLink(target: StatusTarget): Promise<StatusResult> {
             responseMs: ms,
         };
     } catch {
-        if (target.type === "external") {
-            return {
-                name: target.name,
-                url: target.url,
-                status: "unknown",
-                responseMs: null,
-                note: "External — open link to verify",
-            };
-        }
         return {
             name: target.name,
             url: target.url,

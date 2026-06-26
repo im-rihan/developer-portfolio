@@ -7,6 +7,7 @@ import { Scene3D } from "@/components/effects/Scene3D";
 import { CustomCursor } from "@/components/effects/CustomCursor";
 import { AnalysisOverlay, InsightsButton } from "@/components/overlay/AnalysisOverlay";
 import { VisitorTracker } from "@/components/analytics/VisitorTracker";
+import { ContactDock } from "./ContactDock";
 
 export function AppShell({ children }: { children: ReactNode }) {
     const [insightsOpen, setInsightsOpen] = useState(false);
@@ -19,6 +20,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Navbar />
             <main className="main-content">{children}</main>
             <Footer />
+            <ContactDock />
             <InsightsButton onClick={() => setInsightsOpen(true)} />
             <AnalysisOverlay open={insightsOpen} onClose={() => setInsightsOpen(false)} />
         </>
