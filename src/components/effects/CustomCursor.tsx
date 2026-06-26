@@ -1,23 +1,36 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { motion, useSpring } from "framer-motion";
 import styles from "./CustomCursor.module.css";
 
 type CursorMode = "default" | "pointer" | "card" | "text";
+
+interface TrailDot {
+    id: string;
+    x: number;
+    y: number;
+}
+
+const TRAIL_LENGTH = 12;
+const MAGNETIC_SELECTOR = "a, button, .btn, .glass-card, [data-tilt-card], [data-cursor]";
 
 export function CustomCursor() {
     const [enabled, setEnabled] = useState(false);
     const [visible, setVisible] = useState(false);
     const [mode, setMode] = useState<CursorMode>("default");
     const [clicking, setClicking] = useState(false);
+    const [trail, setTrail] = useState<TrailDot[]>([]);
+    const lastTrailAt = useRef(0);
 
-    const dotX = useSpring(0, { stiffness: 900, damping: 45, mass: 0.2 });
-    const dotY = useSpring(0, { stiffness: 900, damping: 45, mass: 0.2 });
-    const ringX = useSpring(0, { stiffness: 280, damping: 28, mass: 0.6 });
-    const ringY = useSpring(0, { stiffness: 280, damping: 28, mass: 0.6 });
-    const glowX = useSpring(0, { stiffness: 120, damping: 30, mass: 1 });
-    const glowY = useSpring(0, { stiffness: 120, damping: 30, mass: 1 });
+    const dotX = useSpring(0, { stiffness: 1200, damping: 50, mass: 0.15 });
+    const dotY = useSpring(0, { stiffness: 1200, damping: 50, mass: 0.15 });
+    const ringX = useSpring(0, { stiffness: 180, damping: 22, mass: 0.5 });
+    const ringY = useSpring(0, { stiffness: 180, damping: 22, mass: 0.5 });
+    const glowX = useSpring(0, { stiffness: 80, damping: 25, mass: 1.2 });
+    const glowY = useSpring(0, { stiffness: 80, damping: 25, mass: 1.2 });
+    const orbitX = useSpring(0, { stiffness: 140, damping: 30, mass: 0.8 });
+    const orbitY = useSpring(0, { stiffness: 140, damping: 30, mass: 0.8 });
 
     const resolveMode = useCallback((target: EventTarget | null): CursorMode => {
         if (!(target instanceof Element)) return "default";
@@ -29,6 +42,24 @@ export function CustomCursor() {
         return "default";
     }, []);
 
+    const resolveMagneticOffset = useCallback((target: EventTarget | null, clientX: number, clientY: number, cursorMode: CursorMode) => {
+        if (!(target instanceof Element)) return { x: 0, y: 0 };
+        const el = target.closest(MAGNETIC_SELECTOR) as HTMLElement | null;
+        if (!el) return { x: 0, y: 0 };
+        const rect = el.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+        const dx = cx - clientX;
+        const dy = cy - clientY;
+        const dist = Math.hypot(dx, dy);
+        const strength = cursorMode === "pointer" ? 0.45 : cursorMode === "card" ? 0.28 : 0.15;
+        const maxPull = 56;
+        if (dist > 180) return { x: 0, y: 0 };
+        const pull = Math.min(maxPull, dist * strength);
+        const angle = Math.atan2(dy, dx);
+        return { x: Math.cos(angle) * pull, y: Math.sin(angle) * pull };
+    }, []);
+
     useEffect(() => {
         const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
         const isCoarse = window.matchMedia("(pointer: coarse)").matches;
@@ -38,12 +69,19 @@ export function CustomCursor() {
         document.body.classList.add("custom-cursor");
 
         const move = (e: MouseEvent) => {
+            const nextMode = resolveMode(e.target);
+            setMode(nextMode);
+            const magnetic = resolveMagneticOffset(e.target, e.clientX, e.clientY, nextMode);
+
             dotX.set(e.clientX);
             dotY.set(e.clientY);
-            ringX.set(e.clientX);
-            ringY.set(e.clientY);
+            ringX.set(e.clientX + magnetic.x);
+            ringY.set(e.clientY + magnetic.y);
             glowX.set(e.clientX);
             glowY.set(e.clientY);
+            orbitX.set(e.clientX + magnetic.x * 0.5);
+            orbitY.set(e.clientY + magnetic.y * 0.5);
+
             document.documentElement.style.setProperty("--mouse-x", `${e.clientX}px`);
             document.documentElement.style.setProperty("--mouse-y", `${e.clientY}px`);
             document.documentElement.style.setProperty(
@@ -54,7 +92,17 @@ export function CustomCursor() {
                 "--mouse-ny",
                 String(-((e.clientY / window.innerHeight) * 2 - 1))
             );
-            setMode(resolveMode(e.target));
+
+            const now = performance.now();
+            if (now - lastTrailAt.current > 24) {
+                lastTrailAt.current = now;
+                const pointId = `${now}-${Math.random().toString(36).slice(2, 8)}`;
+                setTrail((prev) => [
+                    { id: pointId, x: e.clientX, y: e.clientY },
+                    ...prev.slice(0, TRAIL_LENGTH - 1),
+                ]);
+            }
+
             setVisible(true);
         };
 
@@ -77,7 +125,7 @@ export function CustomCursor() {
             document.documentElement.removeEventListener("mouseleave", leave);
             document.documentElement.removeEventListener("mouseenter", enter);
         };
-    }, [dotX, dotY, ringX, ringY, glowX, glowY, resolveMode]);
+    }, [dotX, dotY, ringX, ringY, glowX, glowY, orbitX, orbitY, resolveMode, resolveMagneticOffset]);
 
     if (!enabled || !visible) return null;
 
@@ -94,6 +142,26 @@ export function CustomCursor() {
                 style={{ x: glowX, y: glowY }}
                 aria-hidden
             />
+            <motion.div
+                className={`${styles.orbit} ${modeClass}`}
+                style={{ x: orbitX, y: orbitY }}
+                aria-hidden
+            />
+            {trail.map((t, i) => (
+                <span
+                    key={t.id}
+                    className={styles.trail}
+                    style={{
+                        transform: `translate(${t.x}px, ${t.y}px)`,
+                        opacity: Math.max(0, 0.5 - i * 0.04),
+                        width: Math.max(2, 7 - i * 0.45),
+                        height: Math.max(2, 7 - i * 0.45),
+                        marginLeft: Math.max(-1.5, -(3.5 - i * 0.22)),
+                        marginTop: Math.max(-1.5, -(3.5 - i * 0.22)),
+                    }}
+                    aria-hidden
+                />
+            ))}
             <motion.div
                 className={`${styles.ring} ${modeClass} ${clicking ? styles.clicking : ""}`}
                 style={{ x: ringX, y: ringY }}

@@ -1,4 +1,10 @@
 import { ContributionGraph } from "@/components/github/ContributionGraph";
+import { createPageMetadata } from "@/lib/site-metadata";
+
+export const metadata = createPageMetadata(
+    "GitHub Activity",
+    "Public contribution graph and activity insights for @im-rihan."
+);
 
 export default function GitHubPage() {
     return (

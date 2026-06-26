@@ -1,4 +1,10 @@
 import { GalleryGrid } from "@/components/gallery/GalleryGrid";
+import { createPageMetadata } from "@/lib/site-metadata";
+
+export const metadata = createPageMetadata(
+    "Gallery",
+    "Personal snapshots — work, learning, and life."
+);
 
 export default function GalleryPage() {
     return (

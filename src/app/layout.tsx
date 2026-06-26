@@ -1,8 +1,7 @@
-import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import { Providers } from "@/components/Providers";
 import { AppShell } from "@/components/layout/AppShell";
-import { siteMeta } from "@/data/profile";
+import { rootMetadata } from "@/lib/site-metadata";
 import "./globals.css";
 
 const inter = Inter({
@@ -17,11 +16,7 @@ const jetbrainsMono = JetBrains_Mono({
     display: "swap",
 });
 
-export const metadata: Metadata = {
-    title: `${siteMeta.name} — ${siteMeta.title}`,
-    description: siteMeta.description,
-    metadataBase: new URL("https://im-rihan.github.io"),
-};
+export const metadata = rootMetadata;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
     return (

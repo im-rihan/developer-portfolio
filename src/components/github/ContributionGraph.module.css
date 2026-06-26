@@ -1,87 +1,181 @@
 .wrapper {
     display: grid;
-    gap: 24px;
-    max-width: 900px;
-    margin: 0 auto 80px;
+    gap: 20px;
+    max-width: 100%;
+    margin: 0 auto 64px;
 }
 
 .loading, .error {
     text-align: center;
-    padding: 48px;
+    padding: 36px;
     color: var(--text-muted);
     max-width: 600px;
-    margin: 0 auto 80px;
-}
-
-.error a {
-    color: var(--primary-light);
+    margin: 0 auto 64px;
 }
 
 .graphCard {
-    padding: 28px;
-    overflow-x: auto;
+    padding: 22px;
 }
 
 .header {
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
+    align-items: baseline;
     gap: 8px;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
 }
 
 .header h2 {
-    font-size: 1.15rem;
+    font-size: 1.05rem;
     font-weight: 700;
 }
 
 .header span {
-    font-size: 0.88rem;
+    font-size: 0.78rem;
     color: var(--text-muted);
+}
+
+.scroll {
+    overflow-x: auto;
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+    -webkit-overflow-scrolling: touch;
+}
+
+.monthSpacer {
+    width: 20px;
+    flex-shrink: 0;
+}
+
+.monthRow {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 6px;
+    min-width: min-content;
+}
+
+.monthCell {
+    width: 14px;
+    font-size: 0.62rem;
+    color: var(--text-muted);
+    overflow: visible;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.graphBody {
+    display: flex;
+    gap: 8px;
+    min-width: min-content;
+}
+
+.dayLabels {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-top: 2px;
+    font-size: 0.62rem;
+    color: var(--text-muted);
+    width: 20px;
+    flex-shrink: 0;
+}
+
+.dayLabels span {
+    height: 14px;
+    line-height: 14px;
 }
 
 .grid {
     display: flex;
-    gap: 3px;
+    gap: 4px;
 }
 
 .week {
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 4px;
 }
 
 .cell {
-    width: 12px;
-    height: 12px;
-    border-radius: 2px;
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
     background: var(--bg-elevated);
+    flex-shrink: 0;
+    transition: transform 0.15s, outline 0.15s;
+}
+
+.cell:hover {
+    transform: scale(1.2);
+    outline: 1px solid rgba(20, 184, 166, 0.55);
+    z-index: 1;
 }
 
 .l0 { background: var(--bg-elevated); }
-.l1 { background: rgba(20, 184, 166, 0.3); }
-.l2 { background: rgba(20, 184, 166, 0.5); }
-.l3 { background: rgba(20, 184, 166, 0.75); }
+.l1 { background: rgba(20, 184, 166, 0.28); }
+.l2 { background: rgba(20, 184, 166, 0.48); }
+.l3 { background: rgba(20, 184, 166, 0.72); }
 .l4 { background: #14b8a6; }
 
+.legend {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+}
+
+.legendCell {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+}
+
+.fallbackWrap {
+    overflow-x: auto;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--bg-elevated);
+    padding: 12px;
+}
+
+.fallbackImg {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+.fallbackNote {
+    margin-top: 12px;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+}
+
+.fallbackNote a {
+    color: var(--primary-light);
+}
+
 .insights {
-    padding: 28px;
+    padding: 22px;
 }
 
 .insights h3 {
-    font-size: 1rem;
+    font-size: 0.95rem;
     font-weight: 700;
     color: var(--primary-light);
-    margin-bottom: 16px;
+    margin-bottom: 14px;
 }
 
 .insights li {
     position: relative;
     padding-left: 16px;
-    margin-bottom: 10px;
-    font-size: 0.9rem;
+    margin-bottom: 8px;
+    font-size: 0.86rem;
     color: var(--text-muted);
-    line-height: 1.55;
+    line-height: 1.5;
 }
 
 .insights li::before {
@@ -89,4 +183,30 @@
     position: absolute;
     left: 0;
     color: var(--primary-light);
+}
+
+@media (max-width: 640px) {
+    .cell {
+        width: 11px;
+        height: 11px;
+    }
+
+    .monthRow {
+        grid-auto-columns: 11px;
+        margin-left: 24px;
+    }
+
+    .dayLabels span {
+        height: 11px;
+        line-height: 11px;
+        font-size: 0.58rem;
+    }
+
+    .week {
+        gap: 3px;
+    }
+
+    .grid {
+        gap: 3px;
+    }
 }

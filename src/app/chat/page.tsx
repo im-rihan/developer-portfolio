@@ -1,4 +1,10 @@
 import { ChatWindow } from "@/components/chat/ChatWindow";
+import { createPageMetadata } from "@/lib/site-metadata";
+
+export const metadata = createPageMetadata(
+    "Portfolio Chat",
+    "Ask about skills, experience, projects, and certifications."
+);
 
 export default function ChatPage() {
     return (

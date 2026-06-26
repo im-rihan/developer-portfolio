@@ -1,3 +1,51 @@
+.trail {
+    position: fixed;
+    top: 0;
+    left: 0;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9997;
+    background: radial-gradient(circle, var(--primary-light), transparent 70%);
+    box-shadow: 0 0 10px rgba(20, 184, 166, 0.6);
+}
+
+.orbit {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 72px;
+    height: 72px;
+    margin-left: -36px;
+    margin-top: -36px;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9995;
+    border: 1px dashed rgba(20, 184, 166, 0.25);
+    transition: width 0.35s, height 0.35s, margin 0.35s, opacity 0.25s;
+    animation: orbitSpin 8s linear infinite;
+}
+
+.orbit.pointer {
+    border-color: rgba(245, 158, 11, 0.35);
+    width: 88px;
+    height: 88px;
+    margin-left: -44px;
+    margin-top: -44px;
+}
+
+.orbit.card {
+    border-color: rgba(20, 184, 166, 0.4);
+    width: 96px;
+    height: 96px;
+    margin-left: -48px;
+    margin-top: -48px;
+}
+
+@keyframes orbitSpin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
 .glow {
     position: fixed;
     top: 0;
@@ -127,7 +175,7 @@
 }
 
 @media (max-width: 768px), (prefers-reduced-motion: reduce) {
-    .glow, .dot, .ring {
+    .glow, .dot, .ring, .trail, .orbit {
         display: none;
     }
 }

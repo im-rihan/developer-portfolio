@@ -1,0 +1,54 @@
+.logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+}
+
+.mark {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(145deg, rgba(15, 118, 110, 0.3), rgba(245, 158, 11, 0.12));
+    border: 1.5px solid rgba(20, 184, 166, 0.4);
+    box-shadow: 0 4px 18px rgba(20, 184, 166, 0.18);
+    flex-shrink: 0;
+}
+
+.monogram {
+    font-size: 0.78rem;
+    font-weight: 900;
+    letter-spacing: -1px;
+    background: var(--gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-family: var(--font-mono), monospace;
+}
+
+.wordmark {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.1;
+}
+
+.name {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.surname {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--primary-light);
+}
+
+@media (max-width: 900px) {
+    .wordmark {
+        display: none;
+    }
+}

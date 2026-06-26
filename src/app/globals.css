@@ -12,7 +12,7 @@
     --glass: rgba(15, 23, 42, 0.55);
     --shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.55);
     --gradient: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
-    --nav-h: 72px;
+    --nav-h: 68px;
     --glow: rgba(20, 184, 166, 0.35);
 }
 
@@ -36,7 +36,7 @@
 
 html {
     scroll-behavior: smooth;
-    scroll-padding-top: var(--nav-h);
+    scroll-padding-top: calc(var(--nav-h) + 20px);
 }
 
 body {
@@ -92,7 +92,7 @@ ul {
 }
 
 section {
-    padding: 100px 0;
+    padding: 80px 0;
     position: relative;
 }
 
@@ -106,9 +106,9 @@ section {
 }
 
 .section-title {
-    font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+    font-size: clamp(1.6rem, 3.2vw, 2.25rem);
     font-weight: 800;
-    margin-bottom: 48px;
+    margin-bottom: 36px;
     line-height: 1.2;
 }
 
@@ -124,7 +124,7 @@ section {
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid var(--border);
-    border-radius: 16px;
+    border-radius: 14px;
     box-shadow: var(--shadow);
     position: relative;
     transition: border-color 0.3s, box-shadow 0.3s;
@@ -183,7 +183,7 @@ section {
 }
 
 .page-header {
-    padding: calc(var(--nav-h) + 48px) 0 48px;
+    padding: calc(var(--nav-h) + 36px) 0 40px;
     text-align: center;
 }
 
@@ -214,8 +214,8 @@ section {
 /* Equal-height card grids */
 .card-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 24px;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 18px;
     align-items: stretch;
 }
 
@@ -227,7 +227,7 @@ section {
 .card-equal {
     flex: 1;
     width: 100%;
-    min-height: 280px;
+    min-height: 220px;
     display: flex;
     flex-direction: column;
 }

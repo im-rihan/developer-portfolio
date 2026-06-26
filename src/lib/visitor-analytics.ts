@@ -40,6 +40,8 @@ const SESSION_KEY = "rm-portfolio-tracked";
 const SEEN_COUNTRIES_KEY = "rm-seen-countries";
 const COUNTAPI_NS = "im-rihan-portfolio";
 
+export const VISITOR_UPDATE_EVENT = "rm-visitor-update";
+
 async function countApiHit(key: string): Promise<void> {
     try {
         await fetch(`https://api.countapi.xyz/hit/${COUNTAPI_NS}/${key}`);
@@ -139,47 +141,127 @@ async function fetchGeo(): Promise<GeoResponse | null> {
     }
 }
 
-async function fetchSupabaseVisits(): Promise<VisitRecord[] | null> {
+function getSupabaseConfig(): { url: string; key: string } | null {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    const key =
+        process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     if (!url || !key) return null;
+    return { url, key };
+}
+
+export interface SupabaseProbeResult {
+    configured: boolean;
+    ok: boolean;
+    message: string;
+}
+
+function supabaseHeaders(key: string): HeadersInit {
+    return {
+        apikey: key,
+        Authorization: `Bearer ${key}`,
+    };
+}
+
+function parseSupabaseError(status: number, body: string): string {
+    try {
+        const json = JSON.parse(body) as { code?: string; message?: string };
+        if (json.code === "PGRST205") {
+            return "Table public.visits is missing. Run supabase/visits.sql in Supabase → SQL Editor.";
+        }
+        if (status === 401 || status === 403) {
+            return "Auth failed — check NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY (or anon key) in .env.local.";
+        }
+        return json.message ?? body;
+    } catch {
+        return body || `HTTP ${status}`;
+    }
+}
+
+/** Health check for Supabase analytics backend. */
+export async function probeSupabase(): Promise<SupabaseProbeResult> {
+    const config = getSupabaseConfig();
+    if (!config) {
+        return { configured: false, ok: false, message: "Supabase env vars not set" };
+    }
+
+    try {
+        const res = await fetch(
+            `${config.url}/rest/v1/visits?select=id&limit=1`,
+            { headers: supabaseHeaders(config.key), cache: "no-store" }
+        );
+        if (res.ok) {
+            return { configured: true, ok: true, message: "Connected — public.visits table ready" };
+        }
+        const body = await res.text();
+        return {
+            configured: true,
+            ok: false,
+            message: parseSupabaseError(res.status, body),
+        };
+    } catch (err) {
+        const msg = err instanceof Error ? err.message : "Network error";
+        return { configured: true, ok: false, message: msg };
+    }
+}
+
+async function fetchSupabaseVisits(): Promise<VisitRecord[] | null> {
+    const config = getSupabaseConfig();
+    if (!config) return null;
+    const { url, key } = config;
 
     try {
         const res = await fetch(
             `${url}/rest/v1/visits?select=*&order=timestamp.desc&limit=200`,
             {
-                headers: {
-                    apikey: key,
-                    Authorization: `Bearer ${key}`,
-                },
+                headers: supabaseHeaders(key),
                 cache: "no-store",
             }
         );
-        if (!res.ok) return null;
+        if (!res.ok) {
+            const body = await res.text();
+            if (process.env.NODE_ENV === "development") {
+                console.warn("[analytics] Supabase read failed:", parseSupabaseError(res.status, body));
+            }
+            return null;
+        }
         return (await res.json()) as VisitRecord[];
-    } catch {
+    } catch (err) {
+        if (process.env.NODE_ENV === "development") {
+            console.warn("[analytics] Supabase read error:", err);
+        }
         return null;
     }
 }
 
-async function pushSupabaseVisit(visit: VisitRecord): Promise<void> {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    if (!url || !key) return;
+async function pushSupabaseVisit(visit: VisitRecord): Promise<boolean> {
+    const config = getSupabaseConfig();
+    if (!config) return false;
+    const { url, key } = config;
 
     try {
-        await fetch(`${url}/rest/v1/visits`, {
+        const res = await fetch(`${url}/rest/v1/visits`, {
             method: "POST",
             headers: {
-                apikey: key,
-                Authorization: `Bearer ${key}`,
+                ...supabaseHeaders(key),
                 "Content-Type": "application/json",
                 Prefer: "return=minimal",
             },
             body: JSON.stringify(visit),
         });
-    } catch {
-        /* optional backend */
+        if (!res.ok) {
+            const body = await res.text();
+            if (process.env.NODE_ENV === "development") {
+                console.warn("[analytics] Supabase insert failed:", parseSupabaseError(res.status, body));
+            }
+            return false;
+        }
+        return true;
+    } catch (err) {
+        if (process.env.NODE_ENV === "development") {
+            console.warn("[analytics] Supabase insert error:", err);
+        }
+        return false;
     }
 }
 
@@ -243,6 +325,7 @@ export async function trackVisit(page: string): Promise<VisitRecord | null> {
         countApiHit(`device-${visit.deviceType}`),
     ]);
 
+    window.dispatchEvent(new CustomEvent(VISITOR_UPDATE_EVENT));
     return visit;
 }
 
@@ -289,31 +372,118 @@ async function fetchGlobalStats(localVisits: VisitRecord[]): Promise<{
     };
 }
 
-export async function getVisitorStats(): Promise<VisitorStats & { source: "supabase" | "local" | "global" }> {
-    const local = readVisits();
-    const remote = await fetchSupabaseVisits();
-    const visits = remote && remote.length > 0 ? remote : local;
-    const current = visits[visits.length - 1] ?? null;
-    const global = await fetchGlobalStats(visits);
+function isLocalhost(): boolean {
+    if (typeof window === "undefined") return false;
+    const host = window.location.hostname;
+    return host === "localhost" || host === "127.0.0.1" || host === "[::1]";
+}
 
-    const useGlobal = global.globalTotal !== null;
+/** True when localhost should show sample analytics (use ?live=1 to disable). */
+export function shouldUseDemoAnalytics(): boolean {
+    if (typeof window === "undefined") return false;
+    if (!isLocalhost()) return false;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("live") === "1") return false;
+    return params.get("demo") === "1" || params.get("demo") !== "0";
+}
 
-    if (useGlobal) {
-        const localAgg = aggregate(visits, current);
-        return {
-            total: global.globalTotal ?? visits.length,
-            globalTotal: global.globalTotal,
-            countries: global.countries.length > 0 ? global.countries : localAgg.countries,
-            devices: global.devices.length > 0 ? global.devices : localAgg.devices,
-            recent: visits.slice(-8).reverse(),
-            current,
-            source: "global",
-        };
-    }
+export function getDemoVisitorStats(): VisitorStats & { source: "demo"; isDemo: true } {
+    const now = Date.now();
+    const ago = (hours: number) => new Date(now - hours * 3600_000).toISOString();
+
+    const recent: VisitRecord[] = [
+        { id: "d1", countryCode: "US", countryName: "United States", city: "San Francisco", region: "California", deviceType: "desktop", deviceLabel: "Desktop · macOS", browser: "Chrome", os: "macOS", page: "/", timestamp: ago(1) },
+        { id: "d2", countryCode: "IN", countryName: "India", city: "Bengaluru", region: "Karnataka", deviceType: "mobile", deviceLabel: "Mobile · Android", browser: "Chrome", os: "Android", page: "/github", timestamp: ago(3) },
+        { id: "d3", countryCode: "GB", countryName: "United Kingdom", city: "London", region: "England", deviceType: "desktop", deviceLabel: "Desktop · Windows", browser: "Edge", os: "Windows", page: "/chat", timestamp: ago(5) },
+        { id: "d4", countryCode: "DE", countryName: "Germany", city: "Berlin", region: "Berlin", deviceType: "desktop", deviceLabel: "Desktop · Linux", browser: "Firefox", os: "Linux", page: "/", timestamp: ago(8) },
+        { id: "d5", countryCode: "SG", countryName: "Singapore", city: "Singapore", region: "", deviceType: "mobile", deviceLabel: "Mobile · iOS", browser: "Safari", os: "iOS", page: "/gallery", timestamp: ago(12) },
+        { id: "d6", countryCode: "CA", countryName: "Canada", city: "Toronto", region: "Ontario", deviceType: "tablet", deviceLabel: "Tablet · iOS", browser: "Safari", os: "iOS", page: "/status", timestamp: ago(18) },
+        { id: "d7", countryCode: "AU", countryName: "Australia", city: "Sydney", region: "NSW", deviceType: "desktop", deviceLabel: "Desktop · Windows", browser: "Chrome", os: "Windows", page: "/", timestamp: ago(24) },
+        { id: "d8", countryCode: "IN", countryName: "India", city: "Puri", region: "Odisha", deviceType: "desktop", deviceLabel: "Desktop · Windows", browser: "Chrome", os: "Windows", page: "/status", timestamp: ago(0.2) },
+    ];
 
     return {
-        ...aggregate(visits, current),
-        globalTotal: null,
-        source: remote && remote.length > 0 ? "supabase" : "local",
+        total: 847,
+        globalTotal: 847,
+        countries: [
+            { code: "US", name: "United States", count: 312 },
+            { code: "IN", name: "India", count: 156 },
+            { code: "GB", name: "United Kingdom", count: 89 },
+            { code: "DE", name: "Germany", count: 67 },
+            { code: "CA", name: "Canada", count: 45 },
+            { code: "AU", name: "Australia", count: 38 },
+            { code: "SG", name: "Singapore", count: 22 },
+            { code: "FR", name: "France", count: 18 },
+            { code: "NL", name: "Netherlands", count: 14 },
+            { code: "JP", name: "Japan", count: 11 },
+        ],
+        devices: [
+            { type: "desktop", label: "Desktop", count: 520 },
+            { type: "mobile", label: "Mobile", count: 278 },
+            { type: "tablet", label: "Tablet", count: 49 },
+        ],
+        recent,
+        current: recent[recent.length - 1],
+        source: "demo",
+        isDemo: true,
     };
+}
+
+export async function getVisitorStats(_forceRefresh = false): Promise<
+    VisitorStats & {
+        source: "supabase" | "local" | "global" | "merged" | "demo";
+        isDemo?: boolean;
+        supabase?: SupabaseProbeResult;
+    }
+> {
+    if (shouldUseDemoAnalytics()) {
+        return getDemoVisitorStats();
+    }
+
+    const supabase = await probeSupabase();
+    const local = readVisits();
+    const remoteVisits = supabase.ok ? await fetchSupabaseVisits() : null;
+
+    const visits = remoteVisits && remoteVisits.length > 0 ? remoteVisits : local;
+    const current = local[local.length - 1] ?? visits[visits.length - 1] ?? null;
+    const localAgg = aggregate(visits.length > 0 ? visits : local, current);
+    const global = await fetchGlobalStats(local.length > 0 ? local : visits);
+
+    const countries = mergeCountryStats(localAgg.countries, global.countries);
+    const devices = global.devices.length > 0 ? global.devices : localAgg.devices;
+    const total = global.globalTotal ?? Math.max(localAgg.total, visits.length);
+
+    const source =
+        remoteVisits && remoteVisits.length > 0
+            ? global.globalTotal
+                ? "merged"
+                : "supabase"
+            : global.globalTotal
+              ? "merged"
+              : "local";
+
+    return {
+        total,
+        globalTotal: global.globalTotal,
+        countries,
+        devices,
+        recent: localAgg.recent,
+        current,
+        source,
+        supabase: supabase.configured ? supabase : undefined,
+    };
+}
+
+function mergeCountryStats(local: CountryStat[], global: CountryStat[]): CountryStat[] {
+    const map = new Map<string, CountryStat>();
+    for (const c of [...local, ...global]) {
+        const key = c.code.toUpperCase();
+        const existing = map.get(key);
+        if (existing) {
+            existing.count = Math.max(existing.count, c.count);
+        } else {
+            map.set(key, { ...c, code: key });
+        }
+    }
+    return [...map.values()].sort((a, b) => b.count - a.count);
 }
