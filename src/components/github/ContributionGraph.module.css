@@ -1,20 +1,27 @@
 .wrapper {
     display: grid;
     gap: 20px;
+    width: 100%;
     max-width: 100%;
-    margin: 0 auto 64px;
+    min-width: 0;
+    margin: 0 auto;
+    overflow: hidden;
 }
 
 .loading, .error {
     text-align: center;
-    padding: 36px;
+    padding: 36px 16px;
     color: var(--text-muted);
-    max-width: 600px;
-    margin: 0 auto 64px;
+    width: 100%;
+    max-width: 100%;
+    min-height: 120px;
+    margin: 0;
 }
 
 .graphCard {
     padding: 22px;
+    min-width: 0;
+    overflow: hidden;
 }
 
 .header {
@@ -34,13 +41,29 @@
 .header span {
     font-size: 0.78rem;
     color: var(--text-muted);
+    max-width: 100%;
+    word-break: break-word;
 }
 
 .scroll {
+    width: 100%;
+    max-width: 100%;
     overflow-x: auto;
+    overflow-y: hidden;
     padding-bottom: 8px;
     margin-bottom: 12px;
     -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    border-radius: 8px;
+}
+
+.scroll::-webkit-scrollbar {
+    height: 6px;
+}
+
+.scroll::-webkit-scrollbar-thumb {
+    background: rgba(20, 184, 166, 0.35);
+    border-radius: 999px;
 }
 
 .monthSpacer {
@@ -52,14 +75,16 @@
     display: flex;
     gap: 4px;
     margin-bottom: 6px;
-    min-width: min-content;
+    width: max-content;
+    min-width: 100%;
 }
 
 .monthCell {
     width: 14px;
     font-size: 0.62rem;
     color: var(--text-muted);
-    overflow: visible;
+    overflow: hidden;
+    text-overflow: ellipsis;
     white-space: nowrap;
     flex-shrink: 0;
 }
@@ -67,7 +92,7 @@
 .graphBody {
     display: flex;
     gap: 8px;
-    min-width: min-content;
+    width: max-content;
 }
 
 .dayLabels {
@@ -89,12 +114,14 @@
 .grid {
     display: flex;
     gap: 4px;
+    flex-shrink: 0;
 }
 
 .week {
     display: flex;
     flex-direction: column;
     gap: 4px;
+    flex-shrink: 0;
 }
 
 .cell {
@@ -103,13 +130,18 @@
     border-radius: 3px;
     background: var(--bg-elevated);
     flex-shrink: 0;
-    transition: transform 0.15s, outline 0.15s;
 }
 
-.cell:hover {
-    transform: scale(1.2);
-    outline: 1px solid rgba(20, 184, 166, 0.55);
-    z-index: 1;
+@media (pointer: fine) {
+    .cell {
+        transition: transform 0.15s, outline 0.15s;
+    }
+
+    .cell:hover {
+        transform: scale(1.2);
+        outline: 1px solid rgba(20, 184, 166, 0.55);
+        z-index: 1;
+    }
 }
 
 .l0 { background: var(--bg-elevated); }
@@ -122,6 +154,7 @@
     display: flex;
     align-items: center;
     justify-content: flex-end;
+    flex-wrap: wrap;
     gap: 4px;
     font-size: 0.72rem;
     color: var(--text-muted);
@@ -131,9 +164,12 @@
     width: 12px;
     height: 12px;
     border-radius: 2px;
+    flex-shrink: 0;
 }
 
 .fallbackWrap {
+    width: 100%;
+    max-width: 100%;
     overflow-x: auto;
     border-radius: 10px;
     border: 1px solid var(--border);
@@ -152,14 +188,12 @@
     margin-top: 12px;
     font-size: 0.82rem;
     color: var(--text-muted);
-}
-
-.fallbackNote a {
-    color: var(--primary-light);
+    word-break: break-word;
 }
 
 .insights {
     padding: 22px;
+    min-width: 0;
 }
 
 .insights h3 {
@@ -176,6 +210,7 @@
     font-size: 0.86rem;
     color: var(--text-muted);
     line-height: 1.5;
+    word-break: break-word;
 }
 
 .insights li::before {
@@ -186,27 +221,73 @@
 }
 
 @media (max-width: 640px) {
-    .cell {
-        width: 11px;
-        height: 11px;
+    .wrapper {
+        gap: 14px;
     }
 
-    .monthRow {
-        grid-auto-columns: 11px;
-        margin-left: 24px;
+    .graphCard,
+    .insights {
+        padding: 14px;
+    }
+
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+
+    .header h2 {
+        font-size: 0.92rem;
+    }
+
+    .header span {
+        font-size: 0.72rem;
+        line-height: 1.45;
+    }
+
+    .insights h3 {
+        font-size: 0.88rem;
+    }
+
+    .insights li {
+        font-size: 0.8rem;
+    }
+
+    .loading,
+    .error {
+        padding: 24px 16px;
+        font-size: 0.88rem;
+    }
+
+    .cell {
+        width: 10px;
+        height: 10px;
+    }
+
+    .monthCell {
+        width: 10px;
+        font-size: 0.58rem;
+    }
+
+    .dayLabels {
+        width: 18px;
     }
 
     .dayLabels span {
-        height: 11px;
-        line-height: 11px;
+        height: 10px;
+        line-height: 10px;
         font-size: 0.58rem;
     }
 
     .week {
-        gap: 3px;
+        gap: 2px;
     }
 
     .grid {
-        gap: 3px;
+        gap: 2px;
+    }
+
+    .monthRow {
+        gap: 2px;
     }
 }

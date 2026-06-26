@@ -209,6 +209,33 @@ a.methodCard:hover .methodValue {
 @media (max-width: 900px) {
     .grid {
         grid-template-columns: 1fr;
+        gap: 24px;
+    }
+}
+
+@media (max-width: 768px) {
+    .intro {
+        padding: 16px 18px;
+    }
+
+    .intro h3 {
+        font-size: 0.95rem;
+    }
+
+    .intro p {
+        font-size: 0.85rem;
+    }
+
+    .methodCard {
+        padding: 14px 16px;
+    }
+
+    .methodCard h4 {
+        font-size: 0.9rem;
+    }
+
+    .methodCard p {
+        font-size: 0.8rem;
     }
 }
 

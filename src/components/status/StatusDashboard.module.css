@@ -1,12 +1,17 @@
 .wrapper {
     display: grid;
     gap: 24px;
-    max-width: 960px;
-    margin: 0 auto 80px;
+    width: 100%;
+    max-width: min(960px, 100%);
+    min-width: 0;
+    margin: 0 auto;
+    overflow: hidden;
 }
 
 .statsCard, .linksCard {
     padding: 28px;
+    min-width: 0;
+    overflow: hidden;
 }
 
 .statsCard h2, .linksCard h2 {
@@ -18,7 +23,7 @@
 
 .statsGrid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 16px;
 }
 
@@ -113,6 +118,39 @@
 
 @media (max-width: 480px) {
     .statsGrid {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+
+    .statsCard,
+    .linksCard {
+        padding: 20px 16px;
+    }
+
+    .statsCard h2,
+    .linksCard h2 {
+        font-size: 1rem;
+        margin-bottom: 16px;
+    }
+
+    .num {
+        font-size: 1.4rem;
+    }
+
+    .stat span:last-child {
+        font-size: 0.75rem;
+    }
+
+    .linkList li {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 12px 0;
+    }
+}
+
+@media (max-width: 768px) {
+    .wrapper {
+        margin-bottom: 0;
+        gap: 16px;
     }
 }

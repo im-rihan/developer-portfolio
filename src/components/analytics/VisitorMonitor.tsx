@@ -81,7 +81,11 @@ function WorldMap({ countries }: { countries: VisitorStats["countries"] }) {
                         <div
                             key={c.code}
                             className={styles.mapPin}
-                            style={{ left: `${left}%`, top: `${top}%`, transform: `translate(-50%, -50%) scale(${scale})` }}
+                            style={{
+                                left: `${left}%`,
+                                top: `${top}%`,
+                                "--pin-scale": scale,
+                            } as React.CSSProperties}
                             title={`${c.name}: ${c.count} visit${c.count !== 1 ? "s" : ""}`}
                         >
                             <span className={styles.mapPinGlow} aria-hidden />

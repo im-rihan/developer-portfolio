@@ -5,6 +5,35 @@
     text-decoration: none;
 }
 
+.svgMark {
+    width: 34px;
+    height: 34px;
+    display: block;
+    --logo-fill: rgba(15, 23, 42, 0.62);
+    --logo-stroke-a: #14b8a6;
+    --logo-stroke-b: #0f766e;
+    --logo-cursor: #14b8a6;
+    --logo-divider-opacity: 0.35;
+    --logo-bracket-opacity: 0.45;
+    --logo-letter-opacity: 0.92;
+    --logo-dot-opacity: 0.85;
+    --logo-frame-stroke: 1.5;
+    --logo-letter-stroke: 2.4;
+}
+
+:global(html.light) .svgMark {
+    --logo-fill: rgba(248, 250, 252, 0.98);
+    --logo-stroke-a: #0d9488;
+    --logo-stroke-b: #115e59;
+    --logo-cursor: #0f766e;
+    --logo-divider-opacity: 0.42;
+    --logo-bracket-opacity: 0.52;
+    --logo-letter-opacity: 1;
+    --logo-dot-opacity: 0.92;
+    --logo-frame-stroke: 1.65;
+    --logo-letter-stroke: 2.55;
+}
+
 .mark {
     width: 42px;
     height: 42px;
@@ -24,12 +53,6 @@
     box-shadow: 0 4px 16px rgba(20, 184, 166, 0.15);
 }
 
-.svgMark {
-    width: 34px;
-    height: 34px;
-    display: block;
-}
-
 .svgSm {
     width: 26px;
     height: 26px;
@@ -41,11 +64,11 @@
 }
 
 .svgLetter {
-    transition: stroke-opacity 0.25s;
+    transition: opacity 0.25s;
 }
 
 .logo:hover .svgLetter {
-    stroke-opacity: 1;
+    opacity: 1;
 }
 
 .svgCursor {
@@ -83,14 +106,50 @@
 }
 
 :global(html.light) .mark {
-    background: rgba(255, 255, 255, 0.9);
-    border-color: rgba(15, 118, 110, 0.28);
-    box-shadow: 0 2px 12px rgba(15, 23, 42, 0.08);
+    background: linear-gradient(155deg, rgba(255, 255, 255, 0.98) 0%, rgba(240, 253, 250, 0.9) 100%);
+    border-color: rgba(15, 118, 110, 0.34);
+    box-shadow:
+        0 1px 2px rgba(15, 23, 42, 0.05),
+        0 6px 18px rgba(15, 118, 110, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.95);
 }
 
 :global(html.light) .logo:hover .mark {
-    border-color: rgba(15, 118, 110, 0.45);
-    box-shadow: 0 4px 16px rgba(15, 118, 110, 0.12);
+    border-color: rgba(15, 118, 110, 0.48);
+    box-shadow:
+        0 2px 4px rgba(15, 23, 42, 0.06),
+        0 8px 22px rgba(15, 118, 110, 0.14),
+        inset 0 1px 0 rgba(255, 255, 255, 1);
+}
+
+:global(html.light) .name {
+    color: #0f172a;
+}
+
+:global(html.light) .surname {
+    color: #0f766e;
+    font-weight: 600;
+}
+
+:global(html.light) .logo:hover .name {
+    color: #0d9488;
+}
+
+:global(html.light) .svgMark .svgCursor {
+    opacity: 0.95;
+}
+
+@media (max-width: 960px) {
+    .mark {
+        width: 36px;
+        height: 36px;
+        border-radius: 9px;
+    }
+
+    .svgMark {
+        width: 28px;
+        height: 28px;
+    }
 }
 
 @media (max-width: 900px) {

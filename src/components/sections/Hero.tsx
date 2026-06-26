@@ -8,6 +8,73 @@ import { TiltCard } from "@/components/effects/TiltCard";
 import { SocialLinks } from "@/components/ui/SocialLinks";
 import styles from "./Hero.module.css";
 
+function HeroCodeSnippet() {
+    return (
+        <pre className={styles.codePre}>
+            <code>
+                <span className={styles.kw}>const</span>{" "}
+                <span className={styles.id}>rihan</span>{" "}
+                <span className={styles.punct}>=</span>{" "}
+                <span className={styles.punct}>{"{"}</span>
+                {"\n"}
+                {"  "}
+                <span className={styles.prop}>role</span>
+                <span className={styles.punct}>:</span>{" "}
+                <span className={styles.str}>&quot;Full Stack Developer&quot;</span>
+                <span className={styles.punct}>,</span>
+                {"\n"}
+                {"  "}
+                <span className={styles.prop}>company</span>
+                <span className={styles.punct}>: [</span>
+                <span className={styles.str}>&quot;HomeAbroad Inc.&quot;</span>
+                <span className={styles.punct}>, </span>
+                <span className={styles.str}>&quot;Ziffy.ai&quot;</span>
+                <span className={styles.punct}>],</span>
+                {"\n"}
+                {"  "}
+                <span className={styles.prop}>experience</span>
+                <span className={styles.punct}>: </span>
+                <span className={styles.str}>&quot;4+ years&quot;</span>
+                <span className={styles.punct}>,</span>
+                {"\n"}
+                {"  "}
+                <span className={styles.prop}>stack</span>
+                <span className={styles.punct}>: [</span>
+                <span className={styles.str}>&quot;React&quot;</span>
+                <span className={styles.punct}>, </span>
+                <span className={styles.str}>&quot;Next.js&quot;</span>
+                <span className={styles.punct}>, </span>
+                <span className={styles.str}>&quot;NestJS&quot;</span>
+                <span className={styles.punct}>],</span>
+                {"\n"}
+                {"  "}
+                <span className={styles.prop}>focus</span>
+                <span className={styles.punct}>: [</span>
+                <span className={styles.str}>&quot;Fintech&quot;</span>
+                <span className={styles.punct}>, </span>
+                <span className={styles.str}>&quot;AI&quot;</span>
+                <span className={styles.punct}>, </span>
+                <span className={styles.str}>&quot;DevOps&quot;</span>
+                <span className={styles.punct}>],</span>
+                {"\n"}
+                {"  "}
+                <span className={styles.fn}>build</span>
+                <span className={styles.punct}>() {"{"}</span>
+                {"\n"}
+                {"    "}
+                <span className={styles.kw}>return</span>{" "}
+                <span className={styles.str}>&quot;scalable solutions&quot;</span>
+                <span className={styles.punct}>;</span>
+                {"\n"}
+                {"  "}
+                <span className={styles.punct}>{"}"}</span>
+                {"\n"}
+                <span className={styles.punct}>{"};"}</span>
+            </code>
+        </pre>
+    );
+}
+
 export function Hero() {
     return (
         <header className={styles.hero} id="home">
@@ -40,19 +107,9 @@ export function Hero() {
                                 <span className={styles.red} />
                                 <span className={styles.yellow} />
                                 <span className={styles.green} />
+                                <span className={styles.codeTitle}>rihan.ts</span>
                             </div>
-                            <pre>
-                                <code>{`const rihan = {
-  role: "Full Stack Developer",
-  company: ["HomeAbroad Inc.", "Ziffy.ai"],
-  experience: "4+ years",
-  stack: ["React", "Next.js", "NestJS"],
-  focus: ["Fintech", "AI", "DevOps"],
-  build() {
-    return "scalable solutions";
-  }
-};`}</code>
-                            </pre>
+                            <HeroCodeSnippet />
                         </TiltCard>
                     </FadeIn>
                 </div>
