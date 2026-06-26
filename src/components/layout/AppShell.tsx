@@ -9,6 +9,7 @@ import { CustomCursor } from "@/components/effects/CustomCursor";
 import { AnalysisOverlay, InsightsButton } from "@/components/overlay/AnalysisOverlay";
 import { VisitorTracker } from "@/components/analytics/VisitorTracker";
 import { ContactDock } from "./ContactDock";
+import { HashScrollHandler } from "./HashScrollHandler";
 
 export function AppShell({ children }: { children: ReactNode }) {
     const [insightsOpen, setInsightsOpen] = useState(false);
@@ -16,6 +17,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     return (
         <>
             <VisitorTracker />
+            <HashScrollHandler />
             <BackgroundFX />
             <Scene3D />
             <CustomCursor />

@@ -8,6 +8,7 @@ import { ChevronDown, Mail, ArrowUpRight, Terminal } from "lucide-react";
 import { Logo } from "./Logo";
 import { ThemeToggle } from "./ThemeToggle";
 import { siteMeta } from "@/data/profile";
+import { scrollToSection } from "@/lib/scroll-to-section";
 import styles from "./Navbar.module.css";
 
 const pageLinks = [
@@ -50,13 +51,7 @@ function NavLink({
             onClick={onClick}
             data-cursor="nav"
         >
-            {active && (
-                <motion.span
-                    layoutId="navActivePill"
-                    className={styles.activePill}
-                    transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                />
-            )}
+            {active && <span className={styles.activePill} aria-hidden />}
             <span className={styles.navPrefix} aria-hidden>{">"}</span>
             <span className={styles.navLinkText}>{label}</span>
             <span className={styles.navUnderline} aria-hidden />
@@ -108,21 +103,40 @@ export function Navbar() {
     const isActive = (href: string) =>
         href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
 
+    useEffect(() => {
+        closeAll();
+    }, [pathname]);
+
+    useEffect(() => {
+        if (!open) return;
+        const prev = document.body.style.overflow;
+        document.body.style.overflow = "hidden";
+        return () => {
+            document.body.style.overflow = prev;
+        };
+    }, [open]);
+
     const goToSection = (id: string) => {
         closeAll();
         if (pathname === "/") {
-            const el = document.getElementById(id);
-            if (el) {
-                el.scrollIntoView({ behavior: "smooth" });
-                window.history.replaceState(null, "", `/#${id}`);
-            }
+            scrollToSection(id);
+            window.history.replaceState(null, "", `/#${id}`);
             return;
         }
         router.push(`/#${id}`);
     };
 
     return (
-        <nav className={`${styles.navbar} ${scrolled ? styles.scrolled : ""}`} data-cursor="nav">
+        <>
+            {open && (
+                <button
+                    type="button"
+                    className={styles.menuBackdrop}
+                    aria-label="Close menu"
+                    onClick={closeAll}
+                />
+            )}
+        <nav className={`${styles.navbar} ${scrolled ? styles.scrolled : ""} ${open ? styles.menuOpenState : ""}`} data-cursor="nav">
             <div className={styles.scanBar} aria-hidden />
             <div className={styles.inner}>
                 <Logo onNavigate={closeAll} />
@@ -218,7 +232,7 @@ export function Navbar() {
                         data-cursor="pointer"
                     >
                         <Mail size={16} />
-                        <span>Contact</span>
+                        <span className={styles.contactLabel}>Contact</span>
                     </a>
                     <ThemeToggle />
                     <button
@@ -234,5 +248,6 @@ export function Navbar() {
                 </div>
             </div>
         </nav>
+        </>
     );
 }

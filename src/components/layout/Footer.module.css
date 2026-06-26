@@ -1,11 +1,19 @@
 .footer {
-    padding: 32px 0;
+    padding: 32px 0 calc(var(--fab-inset) + var(--fab-size) + 8px);
     border-top: 1px solid var(--border);
     text-align: center;
     font-size: 0.85rem;
     color: var(--text-muted);
     position: relative;
     z-index: 1;
+}
+
+@media (max-width: 768px) {
+    .footer {
+        padding: 24px 16px calc(var(--fab-inset) + var(--fab-size) + 4px);
+        font-size: 0.78rem;
+        line-height: 1.55;
+    }
 }
 
 .footer a:hover {

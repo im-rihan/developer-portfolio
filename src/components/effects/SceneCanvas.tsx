@@ -1,13 +1,41 @@
 "use client";
 
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Float, Stars } from "@react-three/drei";
 import { useTheme } from "next-themes";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { Group, Mesh, Points } from "three";
 import * as THREE from "three";
+import {
+    lerpVec3,
+    smoothStep,
+    useViewportTracker,
+    type Vec3,
+    type ViewportRef,
+    type ViewportSnapshot,
+} from "./scene-viewport";
 
-type Vec3 = [number, number, number];
+/** Mobile-only scene tuning — desktop uses hardcoded defaults below. */
+const MOBILE = {
+    camera: { position: [0, 0.35, 11.8] as Vec3, fov: 54 },
+    cameraBaseZ: 11.8,
+    focal: { position: [0, 0.5, 0.4] as Vec3, scale: 0.62 },
+    globe: {
+        outerR: 1.5,
+        innerR: 1.0,
+        ringR: 1.85,
+        floatSpeed: 0.85,
+        rotationIntensity: 0.08,
+        floatIntensity: 0.18,
+    },
+    pointer: { x: 0.42, y: 0.28, lookX: 0.2, lookY: 0.12, z: 0.1 },
+} as const;
+
+const DESKTOP = {
+    camera: { position: [0, 0, 9.4] as Vec3, fov: 48 },
+    cameraBaseZ: 9.4,
+    pointer: { x: 1.15, y: 0.78, lookX: 0.45, lookY: 0.3, z: 0.25 },
+} as const;
 
 function useIsLightTheme() {
     const { resolvedTheme } = useTheme();
@@ -20,18 +48,96 @@ function useIsLightTheme() {
     return isLight;
 }
 
-function CameraRig() {
-    useFrame((state) => {
-        const { pointer, camera } = state;
-        camera.position.x = THREE.MathUtils.lerp(camera.position.x, pointer.x * 1.15, 0.042);
-        camera.position.y = THREE.MathUtils.lerp(camera.position.y, pointer.y * 0.78, 0.042);
-        camera.position.z = THREE.MathUtils.lerp(camera.position.z, 9.4 + Math.abs(pointer.y) * 0.25, 0.028);
-        camera.lookAt(pointer.x * 0.45, pointer.y * 0.3, 0);
+function ViewportDriver({ viewportRef }: { viewportRef: ViewportRef }) {
+    useFrame((_, delta) => {
+        const v = viewportRef.current;
+        if (!v) return;
+        v.mobileBlend = smoothStep(v.mobileBlend, v.mobileTarget, delta);
     });
     return null;
 }
 
-function NebulaMist({ dimmed }: { dimmed: boolean }) {
+function ResponsiveCamera({ viewportRef }: { viewportRef: ViewportRef }) {
+    useFrame((state) => {
+        const v = viewportRef.current;
+        if (!v) return;
+
+        const t = v.mobileBlend;
+        const portrait = THREE.MathUtils.clamp((0.88 - v.aspect) / 0.5, 0, 1);
+        const basePos = lerpVec3(DESKTOP.camera.position, MOBILE.camera.position, t);
+        const baseZ = THREE.MathUtils.lerp(DESKTOP.cameraBaseZ, MOBILE.cameraBaseZ, t);
+        const fov = THREE.MathUtils.lerp(DESKTOP.camera.fov, MOBILE.camera.fov, t) + portrait * 2.2 * Math.max(t, 0.35);
+        const pointer = state.pointer;
+
+        const px = THREE.MathUtils.lerp(DESKTOP.pointer.x, MOBILE.pointer.x, t);
+        const py = THREE.MathUtils.lerp(DESKTOP.pointer.y, MOBILE.pointer.y, t);
+        const pz = THREE.MathUtils.lerp(DESKTOP.pointer.z, MOBILE.pointer.z, t);
+        const lookX = THREE.MathUtils.lerp(DESKTOP.pointer.lookX, MOBILE.pointer.lookX, t);
+        const lookY = THREE.MathUtils.lerp(DESKTOP.pointer.lookY, MOBILE.pointer.lookY, t);
+
+        const { camera } = state;
+        if (camera instanceof THREE.PerspectiveCamera) {
+            camera.fov = fov;
+            camera.updateProjectionMatrix();
+        }
+
+        camera.position.x = THREE.MathUtils.lerp(camera.position.x, basePos[0] + pointer.x * px, 0.042);
+        camera.position.y = THREE.MathUtils.lerp(camera.position.y, basePos[1] + pointer.y * py, 0.042);
+        camera.position.z = THREE.MathUtils.lerp(
+            camera.position.z,
+            baseZ + portrait * 0.45 + Math.abs(pointer.y) * pz,
+            0.028
+        );
+        camera.lookAt(pointer.x * lookX, pointer.y * lookY, 0);
+    });
+    return null;
+}
+
+function AdaptiveFog({ viewportRef, isLight }: { viewportRef: ViewportRef; isLight: boolean }) {
+    const { scene } = useThree();
+    const color = isLight ? "#eef2f7" : "#0b1220";
+
+    useFrame(() => {
+        const v = viewportRef.current;
+        if (!v) return;
+
+        const t = v.mobileBlend;
+        const near = THREE.MathUtils.lerp(14, 16, t);
+        const far = THREE.MathUtils.lerp(38, 48, t);
+
+        if (!(scene.fog instanceof THREE.Fog)) {
+            scene.fog = new THREE.Fog(color, near, far);
+            return;
+        }
+
+        scene.fog.near = near;
+        scene.fog.far = far;
+        scene.fog.color.set(color);
+    });
+
+    return null;
+}
+
+function SceneFocal({ viewportRef, children }: { viewportRef: ViewportRef; children: ReactNode }) {
+    const ref = useRef<Group>(null);
+
+    useFrame(() => {
+        const v = viewportRef.current;
+        if (!ref.current || !v) return;
+
+        const t = v.mobileBlend;
+        ref.current.position.set(
+            THREE.MathUtils.lerp(0, MOBILE.focal.position[0], t),
+            THREE.MathUtils.lerp(0, MOBILE.focal.position[1], t),
+            THREE.MathUtils.lerp(0, MOBILE.focal.position[2], t)
+        );
+        ref.current.scale.setScalar(THREE.MathUtils.lerp(1, MOBILE.focal.scale, t));
+    });
+
+    return <group ref={ref}>{children}</group>;
+}
+
+function NebulaMist({ dimmed, viewportRef }: { dimmed: boolean; viewportRef: ViewportRef }) {
     const ref = useRef<Group>(null);
     const clouds = useMemo(
         () =>
@@ -48,11 +154,14 @@ function NebulaMist({ dimmed }: { dimmed: boolean }) {
 
     useFrame((state) => {
         if (!ref.current) return;
-        const t = state.clock.elapsedTime;
+        const t = viewportRef.current?.mobileBlend ?? 0;
+        const px = THREE.MathUtils.lerp(0.6, 0.28, t);
+        const py = THREE.MathUtils.lerp(0.4, 0.22, t);
+        const elapsed = state.clock.elapsedTime;
         ref.current.children.forEach((child, i) => {
             const c = clouds[i];
-            child.position.x = c.x + Math.sin(t * c.speed + i) * 0.9 + state.pointer.x * 0.6;
-            child.position.y = c.y + Math.cos(t * c.speed * 0.8 + i) * 0.55 + state.pointer.y * 0.4;
+            child.position.x = c.x + Math.sin(elapsed * c.speed + i) * 0.9 + state.pointer.x * px;
+            child.position.y = c.y + Math.cos(elapsed * c.speed * 0.8 + i) * 0.55 + state.pointer.y * py;
         });
     });
 
@@ -61,16 +170,22 @@ function NebulaMist({ dimmed }: { dimmed: boolean }) {
             {clouds.map((c, i) => (
                 <mesh key={i} position={[c.x, c.y, c.z]} scale={c.scale}>
                     <sphereGeometry args={[1, 16, 16]} />
-                    <meshBasicMaterial color={c.hue} transparent opacity={dimmed ? 0.018 : 0.038} depthWrite={false} />
+                    <meshBasicMaterial
+                        color={c.hue}
+                        transparent
+                        opacity={dimmed ? 0.018 : THREE.MathUtils.lerp(0.038, 0.042, viewportRef.current?.mobileBlend ?? 0)}
+                        depthWrite={false}
+                    />
                 </mesh>
             ))}
         </group>
     );
 }
 
-function ParticleField({ dimmed }: { dimmed: boolean }) {
+function ParticleField({ dimmed, viewportRef }: { dimmed: boolean; viewportRef: ViewportRef }) {
     const ref = useRef<Points>(null);
-    const count = dimmed ? 1800 : 2800;
+    const isCompact = (viewportRef.current?.mobileTarget ?? 0) === 1;
+    const count = isCompact && !dimmed ? 2800 : isCompact ? 2200 : dimmed ? 1800 : 2800;
 
     const { positions, colors } = useMemo(() => {
         const pos = new Float32Array(count * 3);
@@ -97,11 +212,16 @@ function ParticleField({ dimmed }: { dimmed: boolean }) {
 
     useFrame((state) => {
         if (!ref.current) return;
-        const t = state.clock.elapsedTime;
-        ref.current.rotation.y = t * 0.028 + state.pointer.x * 0.18;
-        ref.current.rotation.x = Math.sin(t * 0.18) * 0.06 + state.pointer.y * 0.05;
-        ref.current.position.x = state.pointer.x * 0.7;
-        ref.current.position.y = state.pointer.y * 0.45;
+        const t = viewportRef.current?.mobileBlend ?? 0;
+        const elapsed = state.clock.elapsedTime;
+        const px = THREE.MathUtils.lerp(0.18, 0.32, t);
+        const py = THREE.MathUtils.lerp(0.05, 0.22, t);
+        const moveX = THREE.MathUtils.lerp(0.7, 0.38, t);
+        const moveY = THREE.MathUtils.lerp(0.45, 0.24, t);
+        ref.current.rotation.y = elapsed * 0.028 + state.pointer.x * px;
+        ref.current.rotation.x = Math.sin(elapsed * 0.18) * 0.06 + state.pointer.y * py;
+        ref.current.position.x = state.pointer.x * moveX;
+        ref.current.position.y = state.pointer.y * moveY;
     });
 
     return (
@@ -111,7 +231,7 @@ function ParticleField({ dimmed }: { dimmed: boolean }) {
                 <bufferAttribute attach="attributes-color" args={[colors, 3]} />
             </bufferGeometry>
             <pointsMaterial
-                size={0.042}
+                size={0.04}
                 vertexColors
                 transparent
                 opacity={dimmed ? 0.45 : 0.78}
@@ -193,10 +313,10 @@ function BrokenStar({
     );
 }
 
-function BrokenStarField({ dimmed }: { dimmed: boolean }) {
+function BrokenStarField({ count }: { count: number }) {
     const stars = useMemo(
         () =>
-            Array.from({ length: dimmed ? 4 : 7 }, (_, i) => ({
+            Array.from({ length: count }, (_, i) => ({
                 position: [
                     (Math.random() - 0.5) * 22,
                     (Math.random() - 0.5) * 14,
@@ -205,7 +325,7 @@ function BrokenStarField({ dimmed }: { dimmed: boolean }) {
                 cycleOffset: i * 1.7 + Math.random() * 2,
                 color: i % 2 === 0 ? "#22d3ee" : "#fbbf24",
             })),
-        [dimmed]
+        [count]
     );
 
     return (
@@ -217,11 +337,11 @@ function BrokenStarField({ dimmed }: { dimmed: boolean }) {
     );
 }
 
-function ShootingStars() {
+function ShootingStars({ count = 8 }: { count?: number }) {
     const group = useRef<Group>(null);
     const stars = useMemo(
         () =>
-            Array.from({ length: 8 }, (_, i) => ({
+            Array.from({ length: count }, (_, i) => ({
                 x: (Math.random() - 0.5) * 22,
                 y: 4 + Math.random() * 9,
                 z: -6 - Math.random() * 10,
@@ -229,7 +349,7 @@ function ShootingStars() {
                 speed: 2.2 + Math.random() * 2.2,
                 delay: i * 2.1 + Math.random() * 3,
             })),
-        []
+        [count]
     );
 
     useFrame((state) => {
@@ -256,11 +376,11 @@ function ShootingStars() {
     );
 }
 
-function Comets() {
+function Comets({ count = 4 }: { count?: number }) {
     const group = useRef<Group>(null);
     const comets = useMemo(
         () =>
-            Array.from({ length: 4 }, (_, i) => ({
+            Array.from({ length: count }, (_, i) => ({
                 startX: 8 + Math.random() * 6,
                 startY: -2 + Math.random() * 12,
                 z: -7 - Math.random() * 6,
@@ -268,7 +388,7 @@ function Comets() {
                 delay: i * 5.5,
                 tail: 2.5 + Math.random() * 2,
             })),
-        []
+        [count]
     );
 
     useFrame((state) => {
@@ -352,12 +472,25 @@ function Planet({
     );
 }
 
-function Planets({ dimmed }: { dimmed: boolean }) {
-    if (dimmed) {
+function Planets({ isLight, viewportRef }: { isLight: boolean; viewportRef: ViewportRef }) {
+    const isCompact = (viewportRef.current?.mobileTarget ?? 0) === 1;
+    if (isLight) {
         return (
             <group>
                 <Planet orbitRadius={7.5} speed={0.08} size={0.35} color="#6366f1" offset={[-2, 1.5, -12]} />
                 <Planet orbitRadius={9} speed={0.05} size={0.28} color="#f97316" offset={[3, -1, -14]} ring="#cbd5e1" />
+            </group>
+        );
+    }
+
+    if (isCompact) {
+        return (
+            <group>
+                <Planet orbitRadius={6.2} speed={0.11} size={0.32} color="#ef4444" offset={[-4, 2, -15]} />
+                <Planet orbitRadius={8.4} speed={0.07} size={0.42} color="#f59e0b" offset={[5, -0.5, -17]} tilt={0.2} />
+                <Planet orbitRadius={10.5} speed={0.05} size={0.36} color="#6366f1" offset={[-1, -2, -19]} ring="#94a3b8" />
+                <Planet orbitRadius={12.8} speed={0.035} size={0.28} color="#22d3ee" offset={[6, 2.5, -21]} />
+                <Planet orbitRadius={14.5} speed={0.028} size={0.24} color="#a855f7" offset={[-7, 0, -23]} />
             </group>
         );
     }
@@ -373,9 +506,10 @@ function Planets({ dimmed }: { dimmed: boolean }) {
     );
 }
 
-function AsteroidBelt({ dimmed }: { dimmed: boolean }) {
+function AsteroidBelt({ dimmed, viewportRef }: { dimmed: boolean; viewportRef: ViewportRef }) {
     const ref = useRef<Group>(null);
-    const count = dimmed ? 18 : 32;
+    const isCompact = (viewportRef.current?.mobileTarget ?? 0) === 1;
+    const count = isCompact && !dimmed ? 32 : isCompact ? 22 : dimmed ? 18 : 32;
     const asteroids = useMemo(
         () =>
             Array.from({ length: count }, (_, i) => ({
@@ -413,15 +547,19 @@ function AsteroidBelt({ dimmed }: { dimmed: boolean }) {
     );
 }
 
-function OrbitingMoon() {
+function OrbitingMoon({ viewportRef }: { viewportRef: ViewportRef }) {
     const moonRef = useRef<Mesh>(null);
 
     useFrame((state) => {
         if (!moonRef.current) return;
-        const t = state.clock.elapsedTime * 0.45;
-        moonRef.current.position.x = Math.cos(t) * 3.8;
-        moonRef.current.position.z = Math.sin(t) * 3.8;
-        moonRef.current.position.y = Math.sin(t * 2) * 0.25;
+        const t = viewportRef.current?.mobileBlend ?? 0;
+        const orbitRadius = THREE.MathUtils.lerp(3.8, 2.35, t);
+        const size = THREE.MathUtils.lerp(0.12, 0.08, t);
+        const elapsed = state.clock.elapsedTime * 0.45;
+        moonRef.current.position.x = Math.cos(elapsed) * orbitRadius;
+        moonRef.current.position.z = Math.sin(elapsed) * orbitRadius;
+        moonRef.current.position.y = Math.sin(elapsed * 2) * 0.25;
+        moonRef.current.scale.setScalar(size / 0.12);
     });
 
     return (
@@ -432,11 +570,11 @@ function OrbitingMoon() {
     );
 }
 
-function DataStreams() {
+function DataStreams({ count = 14 }: { count?: number }) {
     const group = useRef<Group>(null);
     const streams = useMemo(
         () =>
-            Array.from({ length: 14 }, (_, i) => ({
+            Array.from({ length: count }, (_, i) => ({
                 x: (Math.random() - 0.5) * 16,
                 y: (Math.random() - 0.5) * 10,
                 z: -4 - Math.random() * 5,
@@ -445,7 +583,7 @@ function DataStreams() {
                 phase: i * 0.7,
                 color: i % 3 === 0 ? "#22d3ee" : "#14b8a6",
             })),
-        []
+        [count]
     );
 
     useFrame((state) => {
@@ -470,25 +608,32 @@ function DataStreams() {
     );
 }
 
-function WireGlobe() {
+function WireGlobe({ viewportRef }: { viewportRef: ViewportRef }) {
     const outer = useRef<Mesh>(null);
     const inner = useRef<Mesh>(null);
     const ring = useRef<Mesh>(null);
+    const shellRef = useRef<Group>(null);
 
     useFrame((state) => {
-        if (!outer.current || !inner.current || !ring.current) return;
-        const t = state.clock.elapsedTime;
-        outer.current.rotation.y = t * 0.1 + state.pointer.x * 0.22;
-        outer.current.rotation.x = 0.32 + state.pointer.y * 0.08;
-        inner.current.rotation.y = -t * 0.16;
-        inner.current.rotation.z = t * 0.05;
-        ring.current.rotation.z = t * 0.07;
+        if (!outer.current || !inner.current || !ring.current || !shellRef.current) return;
+        const blend = viewportRef.current?.mobileBlend ?? 0;
+        const elapsed = state.clock.elapsedTime;
+        const px = THREE.MathUtils.lerp(0.22, 0.12, blend);
+        const py = THREE.MathUtils.lerp(0.08, 0.05, blend);
+        const globeScale = THREE.MathUtils.lerp(1, MOBILE.globe.outerR / 2.55, blend);
+
+        shellRef.current.scale.setScalar(globeScale);
+        outer.current.rotation.y = elapsed * 0.1 + state.pointer.x * px;
+        outer.current.rotation.x = 0.32 + state.pointer.y * py;
+        inner.current.rotation.y = -elapsed * 0.16;
+        inner.current.rotation.z = elapsed * 0.05;
+        ring.current.rotation.z = elapsed * 0.07;
         ring.current.rotation.x = Math.PI / 2.1;
     });
 
     return (
         <Float speed={1.2} rotationIntensity={0.18} floatIntensity={0.4}>
-            <group>
+            <group ref={shellRef}>
                 <mesh ref={outer}>
                     <icosahedronGeometry args={[2.55, 4]} />
                     <meshBasicMaterial color="#14b8a6" wireframe transparent opacity={0.28} />
@@ -501,29 +646,35 @@ function WireGlobe() {
                     <torusGeometry args={[3.1, 0.015, 8, 80]} />
                     <meshBasicMaterial color="#14b8a6" transparent opacity={0.2} />
                 </mesh>
-                <OrbitingMoon />
+                <OrbitingMoon viewportRef={viewportRef} />
             </group>
         </Float>
     );
 }
 
-function InnerCore() {
+function InnerCore({ viewportRef }: { viewportRef: ViewportRef }) {
+    const groupRef = useRef<Group>(null);
     const ref = useRef<Mesh>(null);
     const glow = useRef<Mesh>(null);
     const light = useRef<THREE.PointLight>(null);
 
     useFrame((state) => {
-        if (!ref.current || !glow.current) return;
-        const t = state.clock.elapsedTime;
-        ref.current.rotation.y = -t * 0.12;
-        const scale = 1 + Math.sin(t * 1.1) * 0.07;
-        ref.current.scale.setScalar(scale);
-        glow.current.scale.setScalar(scale * 1.8);
-        if (light.current) light.current.intensity = 0.5 + Math.sin(t * 1.4) * 0.18;
+        if (!ref.current || !glow.current || !groupRef.current) return;
+        const blend = viewportRef.current?.mobileBlend ?? 0;
+        const elapsed = state.clock.elapsedTime;
+        ref.current.rotation.y = -elapsed * 0.12;
+        const pulse = 1 + Math.sin(elapsed * 1.1) * 0.07;
+        const baseScale = THREE.MathUtils.lerp(1, 0.7, blend);
+        groupRef.current.scale.setScalar(baseScale);
+        ref.current.scale.setScalar(pulse);
+        glow.current.scale.setScalar(pulse * 1.8);
+        if (light.current) {
+            light.current.intensity = (0.5 + Math.sin(elapsed * 1.4) * 0.18) * THREE.MathUtils.lerp(1, 0.85, blend);
+        }
     });
 
     return (
-        <group>
+        <group ref={groupRef}>
             <mesh ref={glow}>
                 <sphereGeometry args={[0.85, 20, 20]} />
                 <meshBasicMaterial color="#14b8a6" transparent opacity={0.04} />
@@ -537,14 +688,27 @@ function InnerCore() {
     );
 }
 
-function OrbitRing({ radius, opacity, speed, color }: { radius: number; opacity: number; speed: number; color: string }) {
+function OrbitRing({
+    radius,
+    opacity,
+    speed,
+    color,
+    viewportRef,
+}: {
+    radius: number;
+    opacity: number;
+    speed: number;
+    color: string;
+    viewportRef: ViewportRef;
+}) {
     const ref = useRef<Mesh>(null);
 
     useFrame((state) => {
         if (!ref.current) return;
+        const blend = viewportRef.current?.mobileBlend ?? 0;
         ref.current.rotation.z = state.clock.elapsedTime * speed;
-        ref.current.rotation.x = Math.PI / 2.15 + state.pointer.y * 0.1;
-        ref.current.position.x = state.pointer.x * 0.3;
+        ref.current.rotation.x = Math.PI / 2.15 + state.pointer.y * THREE.MathUtils.lerp(0.1, 0.06, blend);
+        ref.current.position.x = state.pointer.x * THREE.MathUtils.lerp(0.3, 0.18, blend);
     });
 
     return (
@@ -555,16 +719,16 @@ function OrbitRing({ radius, opacity, speed, color }: { radius: number; opacity:
     );
 }
 
-function HexRing() {
+function HexRing({ count = 14 }: { count?: number }) {
     const ref = useRef<Group>(null);
     const hexes = useMemo(() => {
         const items: { x: number; y: number; s: number }[] = [];
-        for (let i = 0; i < 14; i++) {
-            const angle = (i / 14) * Math.PI * 2;
+        for (let i = 0; i < count; i++) {
+            const angle = (i / count) * Math.PI * 2;
             items.push({ x: Math.cos(angle) * 5.4, y: Math.sin(angle) * 5.4, s: 0.65 + (i % 3) * 0.12 });
         }
         return items;
-    }, []);
+    }, [count]);
 
     useFrame((state) => {
         if (!ref.current) return;
@@ -583,7 +747,7 @@ function HexRing() {
     );
 }
 
-function GridPlane() {
+function GridPlane({ segments = 64 }: { segments?: number }) {
     const ref = useRef<Mesh>(null);
 
     useFrame((state) => {
@@ -596,23 +760,23 @@ function GridPlane() {
 
     return (
         <mesh ref={ref}>
-            <planeGeometry args={[48, 48, 64, 64]} />
+            <planeGeometry args={[48, 48, segments, segments]} />
             <meshBasicMaterial color="#0f766e" wireframe transparent opacity={0.11} />
         </mesh>
     );
 }
 
-function CodeNodes() {
+function CodeNodes({ count = 10 }: { count?: number }) {
     const group = useRef<Group>(null);
     const nodes = useMemo(
         () =>
-            Array.from({ length: 10 }, (_, i) => ({
+            Array.from({ length: count }, (_, i) => ({
                 x: Math.cos(i * 0.628) * 4.6,
                 y: Math.sin(i * 0.82) * 2.6,
                 z: Math.sin(i * 0.95) * 2.4,
                 s: 0.04 + (i % 2) * 0.022,
             })),
-        []
+        [count]
     );
 
     useFrame((state) => {
@@ -632,66 +796,87 @@ function CodeNodes() {
     );
 }
 
-function SceneContent({ isLight }: { isLight: boolean }) {
-    const fogColor = isLight ? "#eef2f7" : "#0b1220";
+function ViewportFrameRelay({
+    viewportRef,
+    onFrame,
+}: {
+    viewportRef: ViewportRef;
+    onFrame?: (snapshot: ViewportSnapshot) => void;
+}) {
+    useFrame(() => {
+        if (!onFrame || !viewportRef.current) return;
+        onFrame(viewportRef.current);
+    });
+    return null;
+}
+
+function SceneContent({ isLight, viewportRef }: { isLight: boolean; viewportRef: ViewportRef }) {
+    const softVisuals = isLight;
+    const isCompact = (viewportRef.current?.mobileTarget ?? 0) === 1;
 
     return (
         <>
-            <CameraRig />
-            <fog attach="fog" args={[fogColor, 14, 38]} />
-            <ambientLight intensity={isLight ? 0.55 : 0.4} />
-            <pointLight position={[8, 8, 8]} intensity={isLight ? 0.35 : 0.48} color="#14b8a6" />
-            <pointLight position={[-6, -4, 5]} intensity={isLight ? 0.2 : 0.28} color="#22d3ee" />
-            <pointLight position={[0, -6, 2]} intensity={0.15} color="#0f766e" />
             <Stars
                 radius={110}
                 depth={55}
-                count={isLight ? 2200 : 4500}
-                factor={isLight ? 3.2 : 4.2}
+                count={isCompact ? 4000 : isLight ? 2200 : 4500}
+                factor={isCompact ? 3.6 : isLight ? 3.2 : 4.2}
                 saturation={isLight ? 0.02 : 0.08}
                 fade
                 speed={0.45}
             />
-            <NebulaMist dimmed={isLight} />
-            <ParticleField dimmed={isLight} />
-            <BrokenStarField dimmed={isLight} />
-            <ShootingStars />
-            <Comets />
-            <Planets dimmed={isLight} />
-            <AsteroidBelt dimmed={isLight} />
-            <DataStreams />
-            <WireGlobe />
-            <InnerCore />
-            <OrbitRing radius={3.3} opacity={isLight ? 0.28 : 0.42} speed={0.085} color="#14b8a6" />
-            <OrbitRing radius={4.5} opacity={isLight ? 0.16 : 0.24} speed={-0.055} color="#22d3ee" />
-            <OrbitRing radius={5.8} opacity={isLight ? 0.08 : 0.13} speed={0.038} color="#64748b" />
-            <HexRing />
-            <CodeNodes />
-            <GridPlane />
+            <ambientLight intensity={isLight ? 0.55 : isCompact ? 0.42 : 0.4} />
+            <pointLight position={[8, 8, 8]} intensity={isLight ? 0.35 : isCompact ? 0.44 : 0.48} color="#14b8a6" />
+            <pointLight position={[-6, -4, 5]} intensity={isLight ? 0.2 : isCompact ? 0.26 : 0.28} color="#22d3ee" />
+            <pointLight position={[0, -6, 2]} intensity={0.15} color="#0f766e" />
+            <NebulaMist dimmed={softVisuals} viewportRef={viewportRef} />
+            <ParticleField dimmed={softVisuals} viewportRef={viewportRef} />
+            <BrokenStarField count={isCompact ? 7 : isLight ? 4 : 7} />
+            <ShootingStars count={8} />
+            <Comets count={4} />
+            <Planets isLight={isLight} viewportRef={viewportRef} />
+            <AsteroidBelt dimmed={softVisuals} viewportRef={viewportRef} />
+            <DataStreams count={14} />
+            <SceneFocal viewportRef={viewportRef}>
+                <WireGlobe viewportRef={viewportRef} />
+                <InnerCore viewportRef={viewportRef} />
+                <OrbitRing radius={3.3} opacity={isLight ? 0.28 : 0.42} speed={0.085} color="#14b8a6" viewportRef={viewportRef} />
+                <OrbitRing radius={4.5} opacity={isLight ? 0.16 : 0.24} speed={-0.055} color="#22d3ee" viewportRef={viewportRef} />
+                <OrbitRing radius={5.8} opacity={isLight ? 0.08 : 0.13} speed={0.038} color="#64748b" viewportRef={viewportRef} />
+            </SceneFocal>
+            <HexRing count={14} />
+            <CodeNodes count={10} />
+            <GridPlane segments={isCompact ? 48 : 64} />
         </>
     );
 }
 
-export function SceneCanvas() {
-    const [eventSource, setEventSource] = useState<HTMLElement | null>(null);
+export function SceneCanvas({
+    container,
+    onViewportFrame,
+}: {
+    container: HTMLElement;
+    onViewportFrame?: (snapshot: ViewportSnapshot) => void;
+}) {
     const isLight = useIsLightTheme();
-
-    useEffect(() => {
-        setEventSource(document.body);
-    }, []);
-
-    if (!eventSource) return null;
+    const [isCompact, setIsCompact] = useState(false);
+    const viewportRef = useViewportTracker(container, (target) => setIsCompact(target === 1));
 
     return (
         <Canvas
-            eventSource={eventSource}
+            eventSource={container}
             eventPrefix="client"
-            camera={{ position: [0, 0, 9.4], fov: 48 }}
-            gl={{ alpha: true, antialias: true, powerPreference: "high-performance" }}
-            style={{ background: "transparent" }}
-            dpr={[1, 1.4]}
+            camera={{ position: DESKTOP.camera.position, fov: DESKTOP.camera.fov }}
+            gl={{ alpha: true, antialias: !isCompact, powerPreference: "high-performance" }}
+            style={{ width: "100%", height: "100%", background: "transparent", display: "block" }}
+            dpr={isCompact ? 1 : [1, 1.4]}
+            resize={{ scroll: false, debounce: { scroll: 50, resize: 0 } }}
         >
-            <SceneContent isLight={isLight} />
+            <ViewportDriver viewportRef={viewportRef} />
+            <ResponsiveCamera viewportRef={viewportRef} />
+            <AdaptiveFog viewportRef={viewportRef} isLight={isLight} />
+            <ViewportFrameRelay viewportRef={viewportRef} onFrame={onViewportFrame} />
+            <SceneContent isLight={isLight} viewportRef={viewportRef} />
         </Canvas>
     );
 }

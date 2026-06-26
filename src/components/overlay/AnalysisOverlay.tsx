@@ -107,9 +107,15 @@ export function AnalysisOverlay({ open, onClose }: AnalysisOverlayProps) {
 
 export function InsightsButton({ onClick }: { onClick: () => void }) {
     return (
-        <button type="button" className={styles.fab} onClick={onClick} aria-label="Open portfolio insights">
+        <button
+            type="button"
+            className={styles.fab}
+            onClick={onClick}
+            aria-label="Open portfolio insights"
+            data-cursor="pointer"
+        >
             <BarChart3 size={22} />
-            <span>Insights</span>
+            <span className={styles.fabLabel}>Insights</span>
         </button>
     );
 }
