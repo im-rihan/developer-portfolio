@@ -4,7 +4,7 @@ import { createPageMetadata } from "@/lib/site-metadata";
 
 export const metadata = createPageMetadata(
     "Portfolio Chat",
-    "Ask about skills, experience, projects, and certifications."
+    "AI assistant for Rihan's resume — streaming replies, markdown answers, and private in-browser chat."
 );
 
 export default function ChatPage() {
@@ -15,7 +15,7 @@ export default function ChatPage() {
                 description={
                     <>
                         Chat with an AI assistant trained on Rihan&apos;s resume — skills, experience,
-                        projects, and certifications. Everything runs in your browser.
+                        projects, and certifications. Streaming replies run entirely in your browser.
                     </>
                 }
             />
