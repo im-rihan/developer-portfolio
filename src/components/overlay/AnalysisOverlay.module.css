@@ -145,6 +145,11 @@
 }
 
 @media (max-width: 768px) {
+    .fab {
+        bottom: max(var(--fab-inset), var(--safe-bottom));
+        left: max(var(--fab-inset), var(--safe-left));
+    }
+
     .backdrop {
         padding: 16px;
         align-items: flex-end;

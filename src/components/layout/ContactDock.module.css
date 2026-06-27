@@ -130,6 +130,15 @@
 }
 
 @media (max-width: 768px) {
+    .dock {
+        bottom: max(var(--fab-inset), var(--safe-bottom));
+        right: max(var(--fab-inset), var(--safe-right));
+    }
+
+    .panel {
+        width: min(320px, calc(100vw - max(var(--fab-inset), var(--safe-right)) * 2));
+    }
+
     .panelHead strong {
         font-size: 0.88rem;
     }

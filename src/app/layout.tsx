@@ -1,7 +1,7 @@
 import { Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import { Providers } from "@/components/Providers";
 import { AppShell } from "@/components/layout/AppShell";
-import { rootMetadata } from "@/lib/site-metadata";
+import { rootMetadata, rootViewport } from "@/lib/site-metadata";
 import "./globals.css";
 
 const spaceGrotesk = Space_Grotesk({
@@ -18,6 +18,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata = rootMetadata;
+export const viewport = rootViewport;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
     return (

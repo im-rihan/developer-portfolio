@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { siteMeta } from "@/data/profile";
 
 const siteUrl = "https://im-rihan.github.io";
@@ -32,4 +32,10 @@ export const rootMetadata: Metadata = {
         default: pageTitle(),
         template: `%s · ${siteMeta.name}`,
     },
+};
+
+export const rootViewport: Viewport = {
+    width: "device-width",
+    initialScale: 1,
+    viewportFit: "cover",
 };

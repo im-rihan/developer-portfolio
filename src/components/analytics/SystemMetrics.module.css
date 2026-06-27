@@ -202,6 +202,26 @@
     }
 }
 
+@media (max-width: 768px) {
+    .panel {
+        padding: 18px 16px;
+        margin-bottom: 16px;
+    }
+
+    .header {
+        margin-bottom: 14px;
+    }
+
+    .headerLeft h2 {
+        font-size: 0.95rem;
+    }
+
+    .live {
+        font-size: 0.62rem;
+        padding: 3px 8px;
+    }
+}
+
 @media (max-width: 480px) {
     .panel {
         padding: 16px;
