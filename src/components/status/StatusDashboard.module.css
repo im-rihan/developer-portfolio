@@ -88,6 +88,8 @@
     font-family: var(--font-mono), monospace;
     font-size: 0.8rem;
     text-align: right;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .healthSummary {
@@ -256,15 +258,8 @@
         gap: 10px;
     }
 
-    .statsCard,
-    .linksCard {
-        padding: 20px 16px;
-    }
-
-    .statsCard h2,
-    .linksCard h2 {
-        font-size: 1rem;
-        margin-bottom: 16px;
+    .stat {
+        padding: 14px 10px;
     }
 
     .num {
@@ -273,12 +268,6 @@
 
     .stat span:last-child {
         font-size: 0.75rem;
-    }
-
-    .linkList li {
-        flex-direction: column;
-        align-items: flex-start;
-        padding: 12px 0;
     }
 }
 
@@ -292,7 +281,53 @@
         grid-template-columns: 1fr;
     }
 
+    .statsCard,
+    .linksCard,
+    .stackCard {
+        padding: 22px 16px;
+    }
+
+    .statsCard h2,
+    .linksCard h2,
+    .stackCard h2 {
+        font-size: 1rem;
+        margin-bottom: 16px;
+    }
+
     .healthSummary {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .healthTile {
+        padding: 14px 10px;
+        font-size: 0.72rem;
+    }
+
+    .healthNum {
+        font-size: 1.15rem;
+    }
+
+    .stackList li {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+        padding: 10px 0;
+    }
+
+    .stackValue {
+        text-align: left;
+        font-size: 0.76rem;
+    }
+
+    .linkList li {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 12px 0;
+    }
+
+    .linkMeta {
+        width: 100%;
+        justify-content: space-between;
     }
 }

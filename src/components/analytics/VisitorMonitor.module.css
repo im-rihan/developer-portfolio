@@ -153,7 +153,15 @@
 }
 
 .header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.headerText {
     flex: 1;
+    min-width: 0;
 }
 
 .header h2 {
@@ -360,6 +368,11 @@
     align-items: center;
     gap: 10px;
     min-width: 0;
+}
+
+.countryRow > span {
+    min-width: 0;
+    overflow-wrap: anywhere;
 }
 
 /* Shared flag styles */
@@ -805,6 +818,12 @@
     padding: 10px 0;
     border-bottom: 1px solid var(--border);
     font-size: 0.84rem;
+    min-width: 0;
+}
+
+.panel ul li > span:first-child {
+    flex: 1;
+    min-width: 0;
 }
 
 .panel ul li:last-child {
@@ -863,6 +882,13 @@
         margin-bottom: 0;
     }
 
+    .demoBanner,
+    .errorBanner,
+    .okBanner {
+        font-size: 0.78rem;
+        padding: 9px 12px;
+    }
+
     .metrics {
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 10px;
@@ -873,6 +899,12 @@
         gap: 8px;
     }
 
+    .metric svg {
+        width: 18px;
+        height: 18px;
+        flex-shrink: 0;
+    }
+
     .metricNum {
         font-size: 1rem;
         word-break: break-word;
@@ -881,10 +913,16 @@
     .metricLabel {
         font-size: 0.62rem;
         line-height: 1.3;
+        overflow-wrap: anywhere;
     }
 
     .card {
         padding: 14px;
+    }
+
+    .header {
+        gap: 10px;
+        margin-bottom: 14px;
     }
 
     .header h2 {
@@ -898,6 +936,19 @@
     .mapWrap {
         min-height: 160px;
         aspect-ratio: 16 / 10;
+    }
+
+    .mapHud {
+        top: 8px;
+        left: 8px;
+        right: 8px;
+        gap: 6px;
+    }
+
+    .mapLive,
+    .mapStat {
+        font-size: 0.62rem;
+        padding: 3px 8px;
     }
 
     .mapPin {
@@ -923,7 +974,12 @@
     }
 
     .shareRow {
-        grid-template-columns: auto 1fr auto;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        gap: 8px;
+    }
+
+    .shareLabel {
+        min-width: 0;
     }
 
     .shareTrack {
@@ -932,6 +988,17 @@
 
     .currentVisit {
         font-size: 0.78rem;
+    }
+
+    .recentList li {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .recentTime {
+        margin-left: auto;
+        white-space: normal;
+        text-align: right;
     }
 }
 
@@ -944,10 +1011,6 @@
         grid-template-columns: 1fr;
     }
 
-    .header {
-        flex-wrap: wrap;
-    }
-
     .panel {
         padding: 14px;
     }
@@ -955,6 +1018,7 @@
     .panel ul li {
         font-size: 0.78rem;
         padding: 8px 0;
+        align-items: flex-start;
     }
 
     .panel ul li strong {
@@ -964,6 +1028,34 @@
     .count {
         font-size: 0.68rem;
         padding: 2px 8px;
+    }
+
+    .recentBody span {
+        word-break: break-word;
+    }
+
+    .recentTime {
+        width: 100%;
+        flex-basis: 100%;
+        margin-left: 0;
+        padding-left: 34px;
+        text-align: left;
+        font-size: 0.68rem;
+    }
+
+    .pagePath {
+        overflow-wrap: anywhere;
+        word-break: break-all;
+    }
+}
+
+@media (max-width: 380px) {
+    .metrics {
+        grid-template-columns: 1fr;
+    }
+
+    .metric {
+        flex-direction: row;
     }
 }
 

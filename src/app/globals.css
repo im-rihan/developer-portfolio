@@ -19,6 +19,10 @@
     --glow: rgba(20, 184, 166, 0.3);
     --fab-inset: 24px;
     --fab-size: 52px;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-right: env(safe-area-inset-right, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-left: env(safe-area-inset-left, 0px);
     --code-bg: #0d1117;
     --code-text: #e6edf3;
     --code-keyword: #ff7b72;
@@ -62,9 +66,11 @@
 
 html {
     scroll-behavior: smooth;
-    scroll-padding-top: calc(var(--nav-h) + 20px);
+    scroll-padding-top: calc(var(--nav-h) + var(--safe-top) + 20px);
     overflow-x: clip;
     max-width: 100%;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
 }
 
 body {
@@ -89,13 +95,7 @@ h1, h2, h3, h4, h5, h6 {
 body::before {
     content: "";
     position: fixed;
-    top: -10%;
-    left: -10%;
-    right: -10%;
-    bottom: -10%;
-    width: 120%;
-    height: 120%;
-    min-height: 120dvh;
+    inset: -10%;
     z-index: 0;
     pointer-events: none;
     background:
@@ -216,7 +216,8 @@ ul {
     width: 100%;
     min-width: 0;
     margin: 0 auto;
-    padding: 0 24px;
+    padding-left: max(24px, var(--safe-left));
+    padding-right: max(24px, var(--safe-right));
 }
 
 section {
@@ -473,16 +474,18 @@ section:first-of-type::before {
 
     :root {
         --nav-h: 60px;
-        --fab-inset: 16px;
+        --fab-inset: max(16px, var(--safe-right), var(--safe-bottom));
         --fab-size: 48px;
     }
 
     .container {
-        padding: 0 16px;
+        padding-left: max(16px, var(--safe-left));
+        padding-right: max(16px, var(--safe-right));
     }
 
     section {
         padding: 56px 0;
+        scroll-margin-top: calc(var(--nav-h) + var(--safe-top) + 24px);
     }
 
     .section-label {
@@ -496,12 +499,13 @@ section:first-of-type::before {
     }
 
     .page-header {
-        padding: calc(var(--nav-h) + 24px) 0 28px;
+        padding: calc(var(--nav-h) + var(--safe-top) + 24px) 0 28px;
     }
 
     .page-header h1 {
         font-size: clamp(1.55rem, 6vw, 2rem);
         margin-bottom: 10px;
+        overflow-wrap: anywhere;
     }
 
     .page-header p {
@@ -513,6 +517,7 @@ section:first-of-type::before {
     .btn {
         padding: 10px 18px;
         font-size: 0.82rem;
+        min-height: 44px;
     }
 
     .card-grid {
@@ -522,6 +527,14 @@ section:first-of-type::before {
 
     .card-equal {
         min-height: auto;
+    }
+
+    .main-content {
+        padding-bottom: calc(var(--fab-inset) + var(--fab-size) + var(--safe-bottom));
+    }
+
+    .glass-card {
+        max-width: 100%;
     }
 }
 

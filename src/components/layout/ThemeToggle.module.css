@@ -16,3 +16,11 @@
     border-color: var(--primary-light);
     transform: scale(1.05);
 }
+
+@media (max-width: 480px) {
+    .toggle {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+    }
+}

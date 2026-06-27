@@ -6,6 +6,33 @@
     padding: 28px;
 }
 
+@media (max-width: 768px) {
+    .card {
+        padding: 20px 18px;
+    }
+
+    .icon {
+        width: 42px;
+        height: 42px;
+        font-size: 1.25rem;
+        margin-bottom: 12px;
+    }
+
+    .card h3 {
+        font-size: 0.98rem;
+    }
+
+    .stack {
+        font-size: 0.68rem;
+        margin-bottom: 10px;
+        overflow-wrap: anywhere;
+    }
+
+    .card p {
+        font-size: 0.84rem;
+    }
+}
+
 .icon {
     width: 48px;
     height: 48px;

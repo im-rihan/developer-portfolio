@@ -478,7 +478,8 @@
         border-top: none;
         border-left: none;
         border-right: none;
-        height: var(--nav-h);
+        height: calc(var(--nav-h) + var(--safe-top));
+        padding-top: var(--safe-top);
         isolation: isolate;
     }
 
@@ -521,7 +522,7 @@
         position: fixed;
         left: 0;
         right: 0;
-        top: var(--nav-h);
+        top: calc(var(--nav-h) + var(--safe-top));
         z-index: 1201;
         width: 100%;
         height: 0;
@@ -550,7 +551,7 @@
         visibility: hidden;
         pointer-events: none;
         transition: transform 0.28s ease, opacity 0.28s ease, visibility 0.28s;
-        max-height: min(calc(100dvh - var(--nav-h)), 70dvh);
+        max-height: min(calc(100dvh - var(--nav-h) - var(--safe-top)), 70dvh);
         overflow-y: auto;
         overscroll-behavior: contain;
         -webkit-overflow-scrolling: touch;
