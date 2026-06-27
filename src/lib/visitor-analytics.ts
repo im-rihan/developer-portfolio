@@ -156,6 +156,17 @@ function writeVisits(visits: VisitRecord[]): void {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(visits.slice(-500)));
 }
 
+/** Newest visits first — order of the input array does not matter. */
+function sortVisitsByRecent(visits: VisitRecord[], limit = 8): VisitRecord[] {
+    return [...visits]
+        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+        .slice(0, limit);
+}
+
+function newestVisit(visits: VisitRecord[]): VisitRecord | null {
+    return sortVisitsByRecent(visits, 1)[0] ?? null;
+}
+
 async function fetchGeo(): Promise<GeoResponse | null> {
     try {
         const res = await fetchWithTimeout("https://ipwho.is/", { cache: "no-store" }, 6000);
@@ -277,7 +288,7 @@ function aggregate(visits: VisitRecord[], current: VisitRecord | null): Omit<Vis
         total: visits.length,
         countries: [...countryMap.values()].sort((a, b) => b.count - a.count),
         devices: [...deviceMap.values()].sort((a, b) => b.count - a.count),
-        recent: visits.slice(-8).reverse(),
+        recent: sortVisitsByRecent(visits, 8),
         current,
     };
 }
@@ -395,6 +406,8 @@ export function getDemoVisitorStats(): VisitorStats & { source: "demo"; isDemo: 
         { id: "d8", countryCode: "IN", countryName: "India", city: "Puri", region: "Odisha", deviceType: "desktop", deviceLabel: "Desktop · Windows", browser: "Chrome", os: "Windows", page: "/status", timestamp: ago(0.2) },
     ];
 
+    const recentSorted = sortVisitsByRecent(recent, 8);
+
     return {
         total: 847,
         globalTotal: 847,
@@ -415,8 +428,8 @@ export function getDemoVisitorStats(): VisitorStats & { source: "demo"; isDemo: 
             { type: "mobile", label: "Mobile", count: 278 },
             { type: "tablet", label: "Tablet", count: 49 },
         ],
-        recent,
-        current: recent[recent.length - 1],
+        recent: recentSorted,
+        current: recentSorted[0] ?? null,
         source: "demo",
         isDemo: true,
     };
@@ -434,7 +447,6 @@ export async function getVisitorStats(_forceRefresh = false): Promise<
     }
 
     const local = readVisits();
-    const current = local[local.length - 1] ?? null;
 
     const [supabase, remoteVisits, global] = await Promise.all([
         probeSupabase(),
@@ -444,6 +456,7 @@ export async function getVisitorStats(_forceRefresh = false): Promise<
 
     const visitSource =
         supabase.ok && remoteVisits && remoteVisits.length > 0 ? remoteVisits : local;
+    const current = newestVisit(visitSource) ?? newestVisit(local);
     const localAgg = aggregate(visitSource, current);
 
     const countries =
