@@ -76,7 +76,7 @@ export const knowledgeBase: KnowledgeEntry[] = [
     },
     {
         keywords: ["project", "portfolio", "built"],
-        answer: "Key projects:\n\n- **Ziffy.ai** — [Case study](/work/ziffy-ai-search/)\n- **appi Core API** — [Case study](/work/nestjs-appi-api/)\n- **3rdpartycomms** — [Case study](/work/php-3rdpartycomms/)\n- **mortgage-pricer** — [Case study](/work/lambda-mortgage-pricer/)\n- **data-pipelines** — [Case study](/work/property-data-pipelines/)\n- **estimate-calculator** — shared TypeScript loan math library",
+        answer: "Key projects — browse [all case studies](/work/):\n\n- **Ziffy.ai** — [Case study](/work/ziffy-ai-search/)\n- **appi Core API** — [Case study](/work/nestjs-appi-api/)\n- **3rdpartycomms** — [Case study](/work/php-3rdpartycomms/)\n- **mortgage-pricer** — [Case study](/work/lambda-mortgage-pricer/)\n- **data-pipelines** — [Case study](/work/property-data-pipelines/)\n- **estimate-calculator** — [Case study](/work/estimate-calculator/)",
     },
     {
         keywords: ["certification", "cert", "udemy", "freecodecamp", "course"],

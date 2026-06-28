@@ -16,7 +16,7 @@ export default function GitHubPage() {
                 description={
                     <>
                         Public contribution graph and rule-based suggestions from{" "}
-                        <a href="https://github.com/im-rihan" target="_blank" rel="noopener noreferrer">
+                        <a href="https://github.com/im-rihan" target="_blank" rel="noopener noreferrer" data-cursor="pointer">
                             @im-rihan
                         </a>
                         .

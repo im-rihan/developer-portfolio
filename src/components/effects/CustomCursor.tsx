@@ -38,7 +38,6 @@ interface Spark {
 
 const TRAIL_LENGTH = 16;
 const MAGNETIC_SELECTOR = "a, button, .btn, .glass-card, [data-tilt-card], [data-cursor]";
-const NAV_SELECTOR = "[data-cursor='nav']";
 const SATELLITE_COUNT = 6;
 
 function toNdc(x: number, y: number) {
@@ -91,29 +90,30 @@ export function CustomCursor() {
 
     const resolveMode = useCallback((target: EventTarget | null): CursorMode => {
         if (!(target instanceof Element)) return "default";
-        const el = target.closest("[data-cursor]");
-        if (el) return (el.getAttribute("data-cursor") as CursorMode) || "default";
-        if (target.closest("a, button, .btn, input, textarea, select, label, [role='button']")) return "pointer";
+
+        const interactive = target.closest(
+            "a, button, .btn, input, textarea, select, label, [role='button'], [role='link'], [role='tab']",
+        );
+        if (interactive instanceof Element) {
+            const tagged = interactive.getAttribute("data-cursor") as CursorMode | null;
+            if (tagged === "nav" || tagged === "pointer" || tagged === "text") return tagged;
+            return "pointer";
+        }
+
+        const tagged = target.closest("[data-cursor]");
+        if (tagged instanceof Element) {
+            return (tagged.getAttribute("data-cursor") as CursorMode) || "default";
+        }
+
         if (target.closest(".glass-card, [data-tilt-card]")) return "card";
-        if (target.closest("p, h1, h2, h3, h4, span")) return "text";
+        if (target.closest("p, h1, h2, h3, h4, span, li")) return "text";
         return "default";
     }, []);
 
     const resolveMagneticOffset = useCallback((target: EventTarget | null, clientX: number, clientY: number, cursorMode: CursorMode) => {
         if (!(target instanceof Element)) return { x: 0, y: 0 };
-        const navEl = target.closest(NAV_SELECTOR) as HTMLElement | null;
-        if (navEl && cursorMode === "nav") {
-            const rect = navEl.getBoundingClientRect();
-            const cx = rect.left + rect.width / 2;
-            const cy = rect.top + rect.height / 2;
-            const dx = cx - clientX;
-            const dy = cy - clientY;
-            const dist = Math.hypot(dx, dy);
-            if (dist > 120) return { x: 0, y: 0 };
-            const pull = Math.min(18, dist * 0.35);
-            const angle = Math.atan2(dy, dx);
-            return { x: Math.cos(angle) * pull, y: Math.sin(angle) * pull };
-        }
+        if (cursorMode === "pointer" || cursorMode === "nav") return { x: 0, y: 0 };
+
         const el = target.closest(MAGNETIC_SELECTOR) as HTMLElement | null;
         if (!el) return { x: 0, y: 0 };
         const rect = el.getBoundingClientRect();
@@ -122,7 +122,7 @@ export function CustomCursor() {
         const dx = cx - clientX;
         const dy = cy - clientY;
         const dist = Math.hypot(dx, dy);
-        const strength = cursorMode === "pointer" ? 0.45 : cursorMode === "nav" ? 0.38 : cursorMode === "card" ? 0.28 : 0.15;
+        const strength = cursorMode === "card" ? 0.28 : 0.15;
         const maxPull = 56;
         if (dist > 180) return { x: 0, y: 0 };
         const pull = Math.min(maxPull, dist * strength);

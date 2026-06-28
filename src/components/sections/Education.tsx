@@ -67,6 +67,7 @@ function CertCard({ cert, index }: { cert: Certification; index: number }) {
                 className={`${styles.certCard} ${styles.linked}`}
                 style={{ "--i": index } as React.CSSProperties}
                 aria-label={`View certificate: ${cert.title}`}
+                data-cursor="pointer"
             >
                 {inner}
             </Link>
@@ -234,4 +235,4 @@ export function Education() {
         </section>
     );
 }
-
+

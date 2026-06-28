@@ -125,6 +125,16 @@ export function Contact() {
                     </FadeIn>
 
                     <FadeIn delay={0.1} className={styles.side}>
+                        {siteMeta.available && (
+                            <div className={`glass-card ${styles.availability}`}>
+                                <span className={styles.availDot} />
+                                <div>
+                                    <strong>Available for hire</strong>
+                                    <p>Remote & hybrid · Full-time · Contract</p>
+                                </div>
+                            </div>
+                        )}
+
                         <ContactForm />
 
                         <TiltCard className={styles.resumeCard}>
@@ -143,37 +153,29 @@ export function Contact() {
                                 <Download size={18} />
                                 View HTML Resume
                             </a>
-                            <a
-                                href={resumePdfUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                download="Rihan-Mohammed-Resume.pdf"
-                                className={`btn btn-outline ${styles.dlBtn}`}
-                                data-cursor="pointer"
-                            >
-                                <FileText size={18} />
-                                PDF Resume
-                            </a>
-                            <a
-                                href={resumeDocxUrl}
-                                download="Rihan-Mohammed-Resume.docx"
-                                className={`btn btn-outline ${styles.dlBtn}`}
-                                data-cursor="pointer"
-                            >
-                                <FileText size={18} />
-                                Word Document
-                            </a>
-                        </TiltCard>
-
-                        {siteMeta.available && (
-                            <div className={`glass-card ${styles.availability}`}>
-                                <span className={styles.availDot} />
-                                <div>
-                                    <strong>Available for hire</strong>
-                                    <p>Remote & hybrid · Full-time · Contract</p>
-                                </div>
+                            <div className={styles.dlRow}>
+                                <a
+                                    href={resumePdfUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    download="Rihan-Mohammed-Resume.pdf"
+                                    className={`btn btn-outline ${styles.dlBtnHalf}`}
+                                    data-cursor="pointer"
+                                >
+                                    <FileText size={18} />
+                                    PDF
+                                </a>
+                                <a
+                                    href={resumeDocxUrl}
+                                    download="Rihan-Mohammed-Resume.docx"
+                                    className={`btn btn-outline ${styles.dlBtnHalf}`}
+                                    data-cursor="pointer"
+                                >
+                                    <FileText size={18} />
+                                    Word
+                                </a>
                             </div>
-                        )}
+                        </TiltCard>
                     </FadeIn>
                 </div>
             </div>

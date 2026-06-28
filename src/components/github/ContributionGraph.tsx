@@ -45,7 +45,7 @@ export function ContributionGraph() {
                     </div>
                     <p className={styles.fallbackNote}>
                         Interactive graph unavailable — showing GitHub&apos;s full-year calendar.{" "}
-                        <a href={`https://github.com/${USERNAME}`} target="_blank" rel="noopener noreferrer">
+                        <a href={`https://github.com/${USERNAME}`} target="_blank" rel="noopener noreferrer" data-cursor="pointer">
                             View profile →
                         </a>
                     </p>

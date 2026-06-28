@@ -1,3 +1,107 @@
+.sectionHead {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+.viewAll {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--primary-light);
+    text-decoration: none;
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--glass-border);
+    background: var(--bg-elevated);
+    transition: border-color 0.2s, color 0.2s;
+}
+
+.viewAll:hover {
+    border-color: rgba(20, 184, 166, 0.4);
+    color: var(--accent);
+}
+
+.filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 28px;
+}
+
+.filterChip {
+    padding: 7px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--glass-border);
+    background: transparent;
+    color: var(--text-muted);
+    font: inherit;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.filterChip:hover {
+    border-color: rgba(20, 184, 166, 0.35);
+    color: var(--text);
+}
+
+.filterActive {
+    background: rgba(20, 184, 166, 0.14);
+    border-color: rgba(20, 184, 166, 0.45);
+    color: var(--primary-light);
+}
+
+:global(html.light) .viewAll {
+    color: var(--primary-dark);
+}
+
+:global(html.light) .filterActive {
+    background: rgba(15, 118, 110, 0.1);
+    border-color: rgba(15, 118, 110, 0.35);
+    color: var(--primary-dark);
+}
+
+.cardTop {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.cardTop .icon {
+    margin-bottom: 0;
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: rgba(20, 184, 166, 0.12);
+    color: var(--primary-light);
+    border: 1px solid rgba(20, 184, 166, 0.25);
+}
+
+:global(html.light) .badge {
+    background: rgba(15, 118, 110, 0.08);
+    color: var(--primary-dark);
+    border-color: rgba(15, 118, 110, 0.2);
+}
+
 .grid {
     /* extends .card-grid from globals */
 }

@@ -121,14 +121,26 @@ export const experience = [
     },
 ];
 
+export type ProjectCategory = "frontend" | "backend" | "integrations" | "data" | "library";
+
 export interface Project {
     icon: string;
     title: string;
     stack: string;
     description: string;
+    category: ProjectCategory;
     url?: string;
     caseStudySlug?: string;
 }
+
+export const projectCategories: { id: ProjectCategory | "all"; label: string }[] = [
+    { id: "all", label: "All" },
+    { id: "frontend", label: "Frontend" },
+    { id: "backend", label: "Backend" },
+    { id: "integrations", label: "Integrations" },
+    { id: "data", label: "Data" },
+    { id: "library", label: "Libraries" },
+];
 
 export const projects: Project[] = [
     {
@@ -138,6 +150,7 @@ export const projects: Project[] = [
         description:
             "AI-native investor platform with streaming NLP search, SEO listings, DSCR calculators, and dual-brand deployment.",
         url: "https://ziffy.ai",
+        category: "frontend",
         caseStudySlug: "ziffy-ai-search",
     },
     {
@@ -147,6 +160,7 @@ export const projects: Project[] = [
         description:
             "Modular REST API powering property search, loan estimates, auth, CRM sync, and AI-assisted SEO content.",
         url: "https://homeabroadinc.com",
+        category: "backend",
         caseStudySlug: "nestjs-appi-api",
     },
     {
@@ -155,6 +169,7 @@ export const projects: Project[] = [
         stack: "PHP 8 · MySQL · Redis · Cloudflare Zero Trust",
         description:
             "Webhook-driven integration hub with agent AI tools, nurture campaigns, and multi-channel comms orchestration.",
+        category: "integrations",
         caseStudySlug: "php-3rdpartycomms",
     },
     {
@@ -163,6 +178,7 @@ export const projects: Project[] = [
         stack: "TypeScript · Puppeteer · AWS Lambda · Serverless",
         description:
             "Headless browser microservice scraping live rates from 11 lender portals with pluggable scraper registry.",
+        category: "backend",
         caseStudySlug: "lambda-mortgage-pricer",
     },
     {
@@ -171,6 +187,8 @@ export const projects: Project[] = [
         stack: "TypeScript · Jest · Zero-dep library",
         description:
             "Reusable mortgage calculation engine — fees, liquidity, DSCR, points/pricing scenarios, Excel rate sheets.",
+        category: "library",
+        caseStudySlug: "estimate-calculator",
     },
     {
         icon: "🔄",
@@ -178,6 +196,7 @@ export const projects: Project[] = [
         stack: "Python · Node.js · Typesense · AWS S3",
         description:
             "End-to-end property data acquisition — multi-source scrapers with chunked/resumable ingestion to MySQL.",
+        category: "data",
         caseStudySlug: "property-data-pipelines",
     },
 ];
