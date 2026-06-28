@@ -147,6 +147,7 @@ export function Contact() {
                                 href={resumePdfUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
+                                download="Rihan-Mohammed-Resume.pdf"
                                 className={`btn btn-outline ${styles.dlBtn}`}
                                 data-cursor="pointer"
                             >
@@ -155,6 +156,7 @@ export function Contact() {
                             </a>
                             <a
                                 href={resumeDocxUrl}
+                                download="Rihan-Mohammed-Resume.docx"
                                 className={`btn btn-outline ${styles.dlBtn}`}
                                 data-cursor="pointer"
                             >
