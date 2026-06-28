@@ -39,6 +39,7 @@
     font-size: 1.15rem;
     font-weight: 700;
     margin-bottom: 4px;
+    color: var(--text);
 }
 
 .subtitle {
@@ -104,8 +105,8 @@
 .field textarea:focus-visible,
 .field select:focus-visible {
     outline: none;
-    border-color: rgba(20, 184, 166, 0.55);
-    box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.15);
+    border-color: var(--primary-light);
+    box-shadow: 0 0 0 3px var(--glow);
 }
 
 .submit {
@@ -145,6 +146,7 @@
 
 .success h3 {
     font-size: 1.15rem;
+    color: var(--text);
 }
 
 .success p {
@@ -162,4 +164,20 @@
     .header h3 {
         font-size: 1.05rem;
     }
+}
+
+/* Light theme — match Contact section icon / label treatment */
+:global(html.light) .label {
+    color: var(--primary-dark);
+}
+
+:global(html.light) .successIcon {
+    background: linear-gradient(135deg, rgba(15, 118, 110, 0.12), rgba(245, 158, 11, 0.08));
+    border-color: rgba(15, 118, 110, 0.22);
+    color: var(--primary);
+}
+
+:global(html.light) .field select {
+    background-color: var(--bg-elevated);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
 }
