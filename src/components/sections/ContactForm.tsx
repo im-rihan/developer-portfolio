@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { Send, CheckCircle2, Mail } from "lucide-react";
 import { siteMeta } from "@/data/profile";
+import { ThemedSelect } from "@/components/ui/ThemedSelect";
 import styles from "./ContactForm.module.css";
 
 const INQUIRY_TOPICS = [
@@ -12,9 +13,12 @@ const INQUIRY_TOPICS = [
     { value: "General inquiry", label: "General inquiry" },
 ] as const;
 
+const DEFAULT_TOPIC = INQUIRY_TOPICS[0].value;
+
 export function ContactForm() {
     const [sent, setSent] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+    const [topic, setTopic] = useState<string>(DEFAULT_TOPIC);
 
     async function handleSubmit(e: FormEvent<HTMLFormElement>) {
         e.preventDefault();
@@ -40,6 +44,7 @@ export function ContactForm() {
             if (!res.ok) throw new Error("Submit failed");
             setSent(true);
             form.reset();
+            setTopic(DEFAULT_TOPIC);
         } catch {
             const subject = encodeURIComponent(`Portfolio · ${topic}`);
             const body = encodeURIComponent(
@@ -59,7 +64,14 @@ export function ContactForm() {
                 </div>
                 <h3>Message sent</h3>
                 <p>Thanks for reaching out — I&apos;ll reply within 24–48 hours.</p>
-                <button type="button" className="btn btn-outline" onClick={() => setSent(false)}>
+                <button
+                    type="button"
+                    className="btn btn-outline"
+                    onClick={() => {
+                        setSent(false);
+                        setTopic(DEFAULT_TOPIC);
+                    }}
+                >
                     Send another
                 </button>
             </div>
@@ -98,16 +110,19 @@ export function ContactForm() {
                     />
                 </label>
 
-                <label className={styles.field}>
-                    <span className={styles.fieldLabel}>Topic</span>
-                    <select name="topic" defaultValue={INQUIRY_TOPICS[0].value} required>
-                        {INQUIRY_TOPICS.map((item) => (
-                            <option key={item.value} value={item.value}>
-                                {item.label}
-                            </option>
-                        ))}
-                    </select>
-                </label>
+                <div className={styles.field}>
+                    <span className={styles.fieldLabel} id="contact-topic-label">
+                        Topic
+                    </span>
+                    <ThemedSelect
+                        name="topic"
+                        value={topic}
+                        onChange={setTopic}
+                        options={INQUIRY_TOPICS}
+                        required
+                        aria-label="Inquiry topic"
+                    />
+                </div>
 
                 <label className={styles.field}>
                     <span className={styles.fieldLabel}>Message</span>

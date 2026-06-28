@@ -1,12 +1,29 @@
 .section {
-    border-top: 1px solid var(--border);
-    background: linear-gradient(180deg, transparent 0%, rgba(15, 118, 110, 0.04) 100%);
+    position: relative;
+    padding-bottom: 112px;
+    background: linear-gradient(
+        180deg,
+        transparent 0%,
+        rgba(15, 118, 110, 0.035) 45%,
+        rgba(15, 118, 110, 0.06) 100%
+    );
+}
+
+.section::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 80px;
+    pointer-events: none;
+    background: linear-gradient(180deg, transparent, var(--bg));
 }
 
 .grid {
     display: grid;
-    grid-template-columns: 1.1fr 0.9fr;
-    gap: 32px;
+    grid-template-columns: 1fr 1fr;
+    gap: 36px;
     align-items: start;
 }
 
@@ -23,7 +40,9 @@
     padding: 20px 24px;
     border-radius: 14px;
     background: var(--bg-card);
-    border: 1px solid var(--border);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(12px);
+    box-shadow: var(--shadow);
 }
 
 .introIcon {
@@ -124,12 +143,20 @@ a.methodCard:hover .methodValue {
 .side {
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    height: 100%;
+    gap: 18px;
+}
+
+.availability {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 20px;
+    border-color: rgba(34, 197, 94, 0.22);
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.06), rgba(15, 118, 110, 0.04));
 }
 
 .resumeCard {
-    padding: 32px 28px;
+    padding: 28px 24px;
     text-align: center;
     display: flex;
     flex-direction: column;
@@ -157,9 +184,9 @@ a.methodCard:hover .methodValue {
 
 .resumeCard p {
     color: var(--text-muted);
-    font-size: 0.9rem;
+    font-size: 0.88rem;
     line-height: 1.6;
-    margin-bottom: 24px;
+    margin-bottom: 20px;
     max-width: 280px;
 }
 
@@ -169,15 +196,21 @@ a.methodCard:hover .methodValue {
     margin-bottom: 10px;
 }
 
-.dlBtn:last-child {
-    margin-bottom: 0;
+.dlRow {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    width: 100%;
+    max-width: 280px;
 }
 
-.availability {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 18px 20px;
+.dlBtnHalf {
+    width: 100%;
+    max-width: none;
+    margin-bottom: 0;
+    padding-left: 12px;
+    padding-right: 12px;
+    font-size: 0.78rem;
 }
 
 .availDot {
@@ -214,6 +247,10 @@ a.methodCard:hover .methodValue {
 }
 
 @media (max-width: 768px) {
+    .section {
+        padding-bottom: 88px;
+    }
+
     .intro {
         padding: 16px 18px;
     }

@@ -3,8 +3,8 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { createPageMetadata } from "@/lib/site-metadata";
 
 export const metadata = createPageMetadata(
-    "Analytics",
-    "Live visitor map, system telemetry, geo analytics, and link health monitoring.",
+    "Status & Analytics",
+    "Live visitor map, system telemetry, endpoint health checks, uptime history, and service status.",
     "/status",
 );
 
@@ -13,7 +13,7 @@ export default function StatusPage() {
         <>
             <PageHeader
                 title="Status & Analytics"
-                description="Live visitor map, system telemetry, geo analytics, and link health monitoring."
+                description="Live visitor map, browser telemetry, endpoint probes with uptime history, and backend service status."
             />
             <div className="container">
                 <StatusDashboard />

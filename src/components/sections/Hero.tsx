@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { siteMeta } from "@/data/profile";
 import { SectionScrollLink } from "@/components/layout/SectionScrollLink";
 import { resumeHtmlUrl, resumePdfUrl, resumeDocxUrl } from "@/lib/resume";
@@ -96,7 +97,16 @@ export function Hero() {
                             <SectionScrollLink sectionId="projects" className="btn btn-primary">
                                 View My Work
                             </SectionScrollLink>
-                            <a href={resumeHtmlUrl} target="_blank" rel="noopener noreferrer" className="btn btn-outline">
+                            <Link href="/work/" className="btn btn-outline" data-cursor="pointer">
+                                Case Studies
+                            </Link>
+                            <a
+                                href={resumeHtmlUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="btn btn-outline"
+                                data-cursor="pointer"
+                            >
                                 View Resume
                             </a>
                         </div>

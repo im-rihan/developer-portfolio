@@ -40,12 +40,16 @@ This repository is the source for **Rihan Mohammed's** developer portfolio — a
 
 ### What makes this portfolio different
 
-- **3D interactive background** — React Three Fiber globe scene that reacts to scroll, theme, and cursor
+- **3D interactive background** — React Three Fiber globe scene that reacts to scroll, theme, and cursor (toggleable; respects reduced motion)
+- **Case studies** — Six production write-ups at `/work/` with problem → approach → results
 - **Portfolio chat** — FAQ assistant trained on resume data; runs entirely in the browser (no LLM API)
-- **Live analytics dashboard** — visitor map, system telemetry, link health checks
+- **Contact form** — Themed dropdown + FormSubmit AJAX with mailto fallback
+- **Live analytics dashboard** — visitor world map, browser telemetry, endpoint health with uptime history
+- **Testimonials** — Endorsements section on the home page
 - **Dark / light theme** — persisted via `next-themes`
 - **Certifications showcase** — 14 certs with issuer filters and animations
-- **SEO & social** — Open Graph images (dark + light), favicon, brand logos
+- **SEO & social** — sitemap, robots.txt, JSON-LD, Open Graph images (dark + light), favicon, brand logos
+- **Optional Plausible analytics** — privacy-friendly page views when `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` is set
 
 ---
 
@@ -108,7 +112,7 @@ images: { unoptimized: true }  // Required when not using Next.js image server
 
 | Feature | Supported? | Notes |
 |---------|------------|-------|
-| App Router pages | Yes | `/`, `/chat/`, `/github/`, `/gallery/`, `/status/` |
+| App Router pages | Yes | `/`, `/work/`, `/work/[slug]/`, `/chat/`, `/github/`, `/gallery/`, `/status/` |
 | `metadata` exports | Yes | SEO titles, OG tags baked into HTML at build |
 | `next/font` | Yes | Google fonts inlined at build |
 | API routes (`route.ts`) | **No** | Requires a server |
@@ -124,6 +128,12 @@ src/app/
 ├── layout.tsx      ← Root layout (wraps every page)
 ├── page.tsx        ← Home route (/)
 ├── globals.css     ← Global design tokens & utilities
+├── not-found.tsx   ← Custom 404
+├── robots.ts       ← robots.txt
+├── sitemap.ts      ← Sitemap (home, subpages, case studies)
+├── work/
+│   ├── page.tsx    ← Case studies index
+│   └── [slug]/     ← Individual case study
 ├── chat/page.tsx
 ├── github/page.tsx
 ├── gallery/page.tsx
@@ -238,27 +248,30 @@ im-rihan.github.io/
 
 | Folder | Files | Responsibility |
 |--------|-------|----------------|
-| **layout/** | `AppShell`, `Navbar`, `Footer`, `Logo`, `ThemeToggle`, `ContactDock`, `PageHeader`, `HashScrollHandler`, `SectionScrollLink` | Site chrome, navigation, hash scrolling, floating contact button |
-| **sections/** | `Hero`, `About`, `Skills`, `Experience`, `Projects`, `Education`, `Contact` | Home page single-page sections (`#about`, `#skills`, etc.) |
+| **layout/** | `AppShell`, `Navbar`, `Footer`, `Logo`, `ThemeToggle`, `ContactDock`, `PageHeader`, `HashScrollHandler`, `SectionScrollLink` | Site chrome, navigation (incl. footer quick links), hash scrolling, floating contact FAB |
+| **sections/** | `Hero`, `About`, `Skills`, `Experience`, `Projects`, `Testimonials`, `Education`, `Contact`, `ContactForm` | Home page single-page sections (`#about`, `#skills`, etc.) |
 | **effects/** | `Scene3D`, `SceneCanvas`, `BackgroundFX`, `CustomCursor`, `FadeIn`, `TiltCard`, scene sub-modules | 3D WebGL background, ambient CSS FX, custom pointer |
 | **chat/** | `ChatWindow`, `ChatMarkdown` | Portfolio FAQ chat UI + lightweight markdown renderer |
 | **analytics/** | `VisitorTracker`, `VisitorMonitor` | Session tracking + world map dashboard |
 | **github/** | `ContributionGraph` | GitHub contribution heatmap + insights |
 | **gallery/** | `GalleryGrid` | Placeholder gallery tiles + lightbox |
-| **status/** | `StatusDashboard` | Analytics page layout orchestration |
+| **status/** | `StatusDashboard` | Status page — telemetry, visitor monitor, service health, link probes + uptime |
 | **overlay/** | `AnalysisOverlay` | Global portfolio insights modal |
-| **ui/** | `SocialLinks` | Reusable social icon links |
+| **ui/** | `SocialLinks`, `ThemedSelect` | Reusable social links and theme-aware form controls |
+| **seo/** | `JsonLd`, `AnalyticsScript` | Structured data + optional Plausible script |
 | **Providers.tsx** | — | Wraps app in `ThemeProvider` |
 
 ### `src/data/` — content layer
 
 | File | Contents |
 |------|----------|
-| `profile.ts` | Site meta, stats, about text, skills, experience, projects, education |
+| `profile.ts` | Site meta, stats, about text, skills, experience, projects (categories + case study slugs), education |
+| `case-studies.ts` | Case study content — slug, problem, approach, results, stack |
+| `testimonials.ts` | Endorsement quotes for the home page testimonials section |
 | `certifications.ts` | 14 certifications with issuer, date, URL, filter counts |
 | `chat-knowledge.ts` | FAQ entries (keywords + markdown answers), suggested prompt pool |
 | `gallery.ts` | Gallery tile definitions (category, gradient, caption) |
-| `status-targets.ts` | URLs probed for link health on `/status` |
+| `status-targets.ts` | 21+ URLs grouped by page, asset, case study, SEO, and external — probed on `/status` |
 | `country-coordinates.ts` | Lat/lon map for visitor pins |
 
 **Design principle:** Content lives in `data/`; components read from it. Updating the portfolio means editing data files, not restructuring UI.
@@ -274,13 +287,15 @@ im-rihan.github.io/
 | `analytics-insights.ts` | Aggregates visit data for dashboards |
 | `client-metrics.ts` | Browser FPS, heap, network telemetry |
 | `github-contribs.ts` | Fetches contribution JSON + generates insights |
-| `status-check.ts` | HEAD requests for link health |
+| `status-check.ts` | Client-side GET probes, latency classification, GitHub API check, overall health |
+| `status-history.ts` | localStorage uptime history (sparklines + % up per endpoint) |
 | `scene-theme.ts` | 3D palette for dark/light |
 | `scene-scroll.ts` | Scroll-linked camera movement |
 | `cursor-signals.ts` | Shares cursor position with 3D scene |
 | `scroll-to-section.ts` | Smooth hash navigation |
 | `country-flag.ts` | Flag emoji helpers |
 | `paths.ts` | `assetPath()` for public URLs |
+| `resume.ts` | Resume download URL helpers for Hero and Contact |
 
 ### `src/utils/supabase/`
 
@@ -340,7 +355,7 @@ HashScrollHandler  → supports /#projects from any page
 BackgroundFX       → CSS gradients / grid overlay
 Scene3D            → full-screen WebGL canvas (dynamic import, no SSR)
 CustomCursor         → replaces pointer on fine-pointer devices
-Navbar + Footer
+Navbar + Footer      → footer includes Home · Work · Contact · Chat · Status
 main {children}      → page-specific content
 ContactDock          → floating contact FAB
 AnalysisOverlay      → portfolio stats modal
@@ -392,7 +407,32 @@ flowchart LR
 | Supabase | `public.visits` table | Cross-device persistence |
 | CountAPI | Remote counters | Global visit totals |
 
-If Supabase env vars are missing, analytics still works locally — the status page shows a warning.
+If Supabase env vars are missing, analytics still works locally — the status page shows Supabase/Plausible service cards and probe results.
+
+### Status & link health (`/status`)
+
+The status dashboard runs entirely in the browser:
+
+```mermaid
+flowchart LR
+    Load[Page load] --> Probe[checkAllLinks]
+    Probe --> Targets[status-targets.ts]
+    Probe --> History[status-history.ts localStorage]
+    Load --> Supabase[probeSupabase]
+    Load --> Telemetry[SystemMetrics FPS/heap]
+    Load --> Visitors[VisitorMonitor geo map]
+    History --> Spark[Uptime sparklines]
+```
+
+| Feature | Detail |
+|---------|--------|
+| **Endpoints** | 21+ URLs — pages, resume assets, sitemap/robots, all case studies, GitHub API |
+| **Health banner** | Operational / degraded / outage based on probe results |
+| **Service cards** | GitHub Pages, Supabase analytics, Plausible (env-gated) |
+| **Link list** | Filter by group, latency bars, re-run checks, last-checked time |
+| **Uptime history** | Last 48 probe runs stored in `localStorage` — sparklines + % up per link |
+
+Case study URLs in `status-targets.ts` are generated from `case-studies.ts` automatically.
 
 ### 3D scene
 
@@ -401,6 +441,7 @@ If Supabase env vars are missing, analytics still works locally — the status p
 - Theme sync via `use-scene-theme.ts` (watches `<html>` class)
 - Scroll parallax via `scene-scroll.ts`
 - Cursor position shared via `cursor-signals.ts` for reactive effects
+- **Custom cursor** (`CustomCursor.tsx`) — hidden native pointer on fine-pointer devices; links/buttons use pointer mode with dot and ring aligned (no magnetic snap on interactive targets)
 
 ### Styling system
 
@@ -415,25 +456,37 @@ If Supabase env vars are missing, analytics still works locally — the status p
 
 | Route | File | Description |
 |-------|------|-------------|
-| `/` | `app/page.tsx` | Single-page portfolio — Hero, About, Skills, Experience, Projects, Education, Contact |
+| `/` | `app/page.tsx` | Single-page portfolio — Hero, About, Skills, Experience, Projects, Testimonials, Education, Contact |
+| `/work/` | `app/work/page.tsx` | Case studies hub — grid of all production write-ups |
+| `/work/[slug]/` | `app/work/[slug]/page.tsx` | Individual case study (problem, approach, results) |
 | `/chat/` | `app/chat/page.tsx` | Portfolio FAQ chat with streaming replies |
 | `/github/` | `app/github/page.tsx` | Contribution heatmap + rule-based insights |
-| `/gallery/` | `app/gallery/page.tsx` | Personal gallery (placeholder gradient tiles) |
-| `/status/` | `app/status/page.tsx` | Live analytics, system metrics, link health |
+| `/gallery/` | `app/gallery/page.tsx` | Personal gallery (placeholder gradient tiles + lightbox) |
+| `/status/` | `app/status/page.tsx` | Visitor map, browser telemetry, service health, link probes + uptime history |
+| *(404)* | `app/not-found.tsx` | Custom not-found page |
 
 ### Home (`/`) sections
 
 | Section | Hash | Content |
 |---------|------|---------|
-| Hero | `#home` | Name, tagline, availability badge, CTAs, animated code card |
+| Hero | `#home` | Name, tagline, availability badge, CTAs (projects, case studies, resume), animated code card |
 | About | `#about` | Bio + stat cards (4+ yrs, 9+ projects, 60+ webhooks) |
 | Skills | `#skills` | 5 categories — Frontend, Backend, Data, AI, DevOps |
 | Experience | `#experience` | Ziffy.ai + HomeAbroad Inc. timelines |
-| Projects | `#projects` | 6 featured production projects |
+| Projects | `#projects` | 6 featured projects with category filters, case study badges, and links to `/work/` |
+| Testimonials | `#testimonials` | Endorsements from colleagues and collaborators |
 | Education | `#education` | Degrees + 14 filterable certifications |
-| Contact | `#contact` | Email, social links, resume download |
+| Contact | `#contact` | Two-column layout — contact methods + social (left); availability badge, FormSubmit form with themed select, resume downloads (HTML / PDF / Word) (right) |
 
-Navbar includes a **Sections** dropdown for hash navigation from any page.
+Navbar includes **Work**, **Chat**, **GitHub**, **Gallery**, **Analytics**, and a **Sections** dropdown for hash navigation from any page.
+
+**Footer** — quick links (Home · Work · Contact · Chat · Status), copyright, and hosting note.
+
+### Contact form
+
+- **`ContactForm.tsx`** — FormSubmit AJAX (`_template: table`, structured subject, `_replyto`)
+- **`ThemedSelect.tsx`** — theme-aware topic dropdown (replaces native `<select>` for dark/light consistency)
+- **Fallback** — opens `mailto:` if FormSubmit fails
 
 ---
 
@@ -454,6 +507,15 @@ Handles the full visit lifecycle: geo resolution, deduplication, persistence, Su
 ### `github-contribs.ts`
 
 Fetches `https://github-contributions-api.deno.dev/im-rihan.json`, builds a heatmap grid, and generates text insights (streaks, busiest day, etc.). Falls back to GitHub's static image on failure.
+
+### `status-check.ts` & `status-history.ts`
+
+```typescript
+// Probes all status-targets in parallel, classifies online/slow/offline/unknown,
+// persists snapshots to localStorage for uptime sparklines.
+checkAllLinks(targets): Promise<StatusResult[]>
+computeOverallHealth(results): "operational" | "degraded" | "outage"
+```
 
 ### `generate-og.mjs`
 
@@ -480,6 +542,9 @@ cp .env.example .env.local
 | `NEXT_PUBLIC_SUPABASE_URL` | Optional | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Optional | Supabase anon/publishable key |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Optional | Alias accepted by `env.ts` |
+| `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` | Optional | Plausible analytics domain (e.g. `im-rihan.github.io`); leave empty to disable |
+
+**GitHub Actions secrets:** add the same `NEXT_PUBLIC_*` vars used locally so production builds include Supabase and Plausible when configured.
 
 **Setup Supabase:**
 
@@ -504,6 +569,8 @@ cp .env.example .env.local
 | `npm run preview` | `build` + `start` |
 | `npm run lint` | Run Next.js ESLint |
 | `npm run generate:brand` | Regenerate PNG/GIF from SVG brand assets |
+| `npm run setup:resume` | Install Python deps + Playwright Chromium for resume export |
+| `npm run generate:resume` | Generate HTML, PDF, and Word resume into `public/` and `docs/` |
 | `node scripts/test-supabase.mjs` | Smoke test Supabase visits table |
 
 ---
@@ -589,6 +656,7 @@ gh api repos/im-rihan/im-rihan.github.io/pages -X PUT \
 |--------|---------|
 | `NEXT_PUBLIC_SUPABASE_URL` | Baked into production build |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Baked into production build |
+| `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` | Optional — enables Plausible in production builds |
 
 ---
 
