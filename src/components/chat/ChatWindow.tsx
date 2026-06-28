@@ -97,6 +97,7 @@ export function ChatWindow() {
     const abortRef = useRef<AbortController | null>(null);
     const lastUserPromptRef = useRef("");
     const usedPromptsRef = useRef<Set<string>>(new Set());
+    const skipInitialScrollRef = useRef(true);
 
     const [activePrompts, setActivePrompts] = useState<string[]>([]);
 
@@ -124,10 +125,19 @@ export function ChatWindow() {
     }, [messages, hydrated]);
 
     const scrollToBottom = useCallback((smooth = true) => {
-        bottomRef.current?.scrollIntoView({ behavior: smooth ? "smooth" : "auto" });
+        const el = messagesRef.current;
+        if (!el) return;
+        el.scrollTo({
+            top: el.scrollHeight,
+            behavior: smooth ? "smooth" : "auto",
+        });
     }, []);
 
     useEffect(() => {
+        if (skipInitialScrollRef.current) {
+            skipInitialScrollRef.current = false;
+            return;
+        }
         scrollToBottom();
     }, [messages, thinking, streaming, scrollToBottom]);
 
